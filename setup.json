@@ -1,0 +1,17 @@
+{
+    "classifiers": [
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS :: MacOS X",
+        "Programming Language :: Python :: 3"
+    ],
+    "description": "Package that integrates AiiDAlab with Electronic Laboratory Notebook.",
+    "install_requires": [
+        "aiida-core>=1.1.0,<2.0.0",
+	"requests"
+    ],
+    "license": "MIT License",
+    "name": "aiidalab_eln",
+    "url": "https://github.com/aiidalab/aiidalab-eln",
+    "version": "0.1.0a1"
+}
