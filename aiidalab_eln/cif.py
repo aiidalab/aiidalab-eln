@@ -1,10 +1,19 @@
-import io
-import requests
-from aiida.plugins import DataFactory
+def upload_cif(
+    sample_manager,
+    cifdata,
+    uuid: str,
+    aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
+):
 
-CifData = DataFactory('cif')  # pylint: disable=invalid-name
+    source_info = {
+        "uuid": uuid,
+        "url": aiidalab_instance,
+        "name": "Structure optimized using the XXX app on AiiDAlab",
+    }
 
-
-def get_cif(url, token):
-    req = requests.get(f'{url}?token={token}', allow_redirects=False)
-    return CifData(file=io.BytesIO(req.content))
+    sample_manager.put_spectrum(
+        spectrum_type="xray",
+        name=f"{uuid}.cif",
+        filecontent=cifdata._prepare_cif(),
+        source_info=source_info,
+    )
