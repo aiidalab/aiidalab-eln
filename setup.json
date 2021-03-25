@@ -8,7 +8,9 @@
     "description": "Package that integrates AiiDAlab with Electronic Laboratory Notebook.",
     "install_requires": [
         "aiida-core>=1.1.0,<2.0.0",
-	"requests"
+    "requests",
+    "pytojcamp",
+    "cheminfopy"
     ],
     "license": "MIT License",
     "name": "aiidalab_eln",
