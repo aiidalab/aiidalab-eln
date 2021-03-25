@@ -4,6 +4,7 @@ from pytojcamp import from_dict
 def upload_isotherm(
     sample_manager,
     isotherm_dict: dict,
+    adsorptive: str,
     uuid: str,
     aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
 ):
@@ -27,7 +28,7 @@ def upload_isotherm(
             },
         },
         data_type="Adsorption Isotherm",
-        meta={"adsorptive": "N2"},
+        meta={"adsorptive": adsorptive},
     )
 
     sample_manager.put_spectrum(
