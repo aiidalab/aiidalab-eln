@@ -21,7 +21,7 @@ def upload_isotherm(
     }
     jcamp = from_dict(
         {
-            "p": {
+            "x": {
                 "data": isotherm_dict["isotherm"]["pressure"],
                 "unit": isotherm_dict["isotherm"]["pressure_unit"],
                 "type": "INDEPENDENT",
