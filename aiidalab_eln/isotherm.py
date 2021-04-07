@@ -14,7 +14,11 @@ def upload_isotherm(
         "url": aiidalab_instance,
         "name": "Isotherm simulated using the isotherm app on AiiDAlab",
     }
-
+    meta = {
+        "adsorptive": adsorptive,
+        "temperature": isotherm_dict["temperature"],
+        "method": "GCMC",
+    }
     jcamp = from_dict(
         {
             "p": {
@@ -29,18 +33,14 @@ def upload_isotherm(
             },
         },
         data_type="Adsorption Isotherm",
-        meta={
-            "adsorptive": adsorptive,
-            "temperature": isotherm_dict["temperature"],
-            "method": "GCMC",
-        },
+        meta=meta,
     )
     name = f"{uuid}.jcamp" if filename is None else f"{filename}.jcamp"
     sample_manager.put_spectrum(
         spectrum_type="isotherm",
         name=name,
         filecontent=jcamp,
-        metadata={"gas": adsorptive},
+        metadata=meta,
         source_info=source_info,
     )
 
