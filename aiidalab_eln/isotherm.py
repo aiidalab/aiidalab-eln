@@ -6,6 +6,7 @@ def upload_isotherm(
     isotherm_dict: dict,
     adsorptive: str,
     uuid: str,
+    filename: str = None,
     aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
 ):
     source_info = {
@@ -28,13 +29,18 @@ def upload_isotherm(
             },
         },
         data_type="Adsorption Isotherm",
-        meta={"adsorptive": adsorptive},
+        meta={
+            "adsorptive": adsorptive,
+            "temperature": isotherm_dict["temperature"],
+            "method": "GCMC",
+        },
     )
-
+    name = f"{uuid}.jcamp" if filename is None else f"{filename}.jcamp"
     sample_manager.put_spectrum(
         spectrum_type="isotherm",
-        name=f"{uuid}.jdx",
+        name=name,
         filecontent=jcamp,
+        metadata={"gas": adsorptive},
         source_info=source_info,
     )
 
