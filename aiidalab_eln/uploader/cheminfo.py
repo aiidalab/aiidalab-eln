@@ -1,16 +1,16 @@
 from pytojcamp import from_dict
+from cheminfopy import Sample
 
 
 def upload_isotherm(
     sample_manager,
     isotherm_dict: dict,
     adsorptive: str,
-    uuid: str,
     filename: str = None,
     aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
 ):
     source_info = {
-        "uuid": uuid,
+        "uuid": isotherm_dict.uuid,
         "url": aiidalab_instance,
         "name": "Isotherm simulated using the isotherm app on AiiDAlab",
     }
@@ -35,7 +35,7 @@ def upload_isotherm(
         data_type="Adsorption Isotherm",
         meta=meta,
     )
-    name = f"{uuid}.jcamp" if filename is None else f"{filename}.jcamp"
+    name = f"{isotherm_dict.uuid}.jcamp" if filename is None else f"{filename}.jcamp"
     sample_manager.put_spectrum(
         spectrum_type="isotherm",
         name=name,
@@ -47,7 +47,6 @@ def upload_isotherm(
 def upload_cif(
     sample_manager,
     cifdata,
-    uuid: str,
     aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
 ):
 
@@ -59,7 +58,18 @@ def upload_cif(
 
     sample_manager.put_spectrum(
         spectrum_type="xray",
-        name=f"{uuid}.cif",
+        name=f"{cifdata.uuid}.cif",
         filecontent=cifdata._prepare_cif(),
         source_info=source_info,
     )
+
+def object_uploader(obj, eln_instance, sample_uuid, token):
+    sample_manager = Sample(
+        eln_instance,
+        sample_uuid=sample_uuid,
+        token=token,
+    )
+    if obj.node_type == "data.dict.Dict.":
+        upload_isotherm(sample_manager, isotherm_dict=obj, adsorptive="N2")
+    elif obj.node_type == "data.cif.CifData.":
+        upload_cif(sample_manager, obj) 
