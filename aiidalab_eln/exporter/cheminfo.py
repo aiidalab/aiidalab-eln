@@ -2,7 +2,7 @@ from pytojcamp import from_dict
 from cheminfopy import Sample
 
 
-def upload_isotherm(
+def export_isotherm(
     sample_manager,
     isotherm,
     adsorptive: str,
@@ -44,7 +44,7 @@ def upload_isotherm(
         source_info=source_info,
     )
 
-def upload_cif(
+def export_cif(
     sample_manager,
     cifdata,
     filename: str = None,
@@ -64,13 +64,13 @@ def upload_cif(
         source_info=source_info,
     )
 
-def object_uploader(obj, eln_instance, sample_uuid, token, filename):
+def object_exporter(obj, eln_instance, sample_uuid, token, filename):
     sample_manager = Sample(
         eln_instance,
         sample_uuid=sample_uuid,
         token=token,
     )
     if obj.node_type == "data.dict.Dict.":
-        upload_isotherm(sample_manager, isotherm=obj, adsorptive="N2", filename=filename)
+        export_isotherm(sample_manager, isotherm=obj, adsorptive="N2", filename=filename)
     elif obj.node_type == "data.cif.CifData.":
-        upload_cif(sample_manager, obj, filename=filename) 
+        export_cif(sample_manager, obj, filename=filename) 
