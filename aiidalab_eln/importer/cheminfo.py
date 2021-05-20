@@ -2,10 +2,10 @@ from aiida.plugins import DataFactory
 from cheminfopy import Sample
 
 
-def import_cif(eln_instance, sample_uuid, sample_token):
+def import_cif(eln_instance, sample_uuid, token):
     object_type = DataFactory("cif")
     sample = Sample(
-        instance=eln_instance, sample_uuid=sample_uuid, token=sample_token
+        instance=eln_instance, sample_uuid=sample_uuid, token=token
     )
     content = sample.get_spectrum(spectrum_type=spectrum_type, name=file_name)
     file = io.BytesIO(bytes(content, "utf8"))
