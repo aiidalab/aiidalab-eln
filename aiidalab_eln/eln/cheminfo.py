@@ -8,14 +8,15 @@ class CheminfoElnConnector(ElnConnector):
     access_token = traitlets.Unicode()
     
     def __init__(self, **kwargs):
+
+        self.session = None
+
         eln_instance_widget = ipw.Text(
             description="ELN address:",
             value="",
             style={"description_width": "initial"},
         )
         traitlets.link((self, "eln_instance"), (eln_instance_widget, "value"))
-        
-        
         token_widget = ipw.Text(
             description="Token:",
             value="",
@@ -40,7 +41,7 @@ class CheminfoElnConnector(ElnConnector):
             "access_token": self.access_token
         }
     
-    def request_token(self, new=None):
+    def request_token(self, _=None):
         with self.output:
             clear_output()
             if self.button_clicked:
@@ -50,6 +51,12 @@ class CheminfoElnConnector(ElnConnector):
                 <iframe src="https://www.cheminfo.org/flavor/tools/Token/index.html" width="400" height="100"></iframe>
                 """))
         self.button_clicked = not self.button_clicked
+    
+    @property
+    def is_connected(self):
+        if self.session and self.session.is_valid_token and self.session.has_rights(rights=["read", "write", "addAttachment"]):
+            return True
+        return False
     
     @traitlets.default("eln_type")
     def set_eln_type(self):
