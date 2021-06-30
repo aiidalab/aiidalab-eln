@@ -41,7 +41,6 @@ class CheminfoElnConnector(ElnConnector):
         }
     
     def request_token(self, new=None):
-
         with self.output:
             clear_output()
             if self.button_clicked:
