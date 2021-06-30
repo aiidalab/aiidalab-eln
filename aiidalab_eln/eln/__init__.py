@@ -13,7 +13,7 @@ class ElnConnector(ipw.VBox):
             eln_instance (str): URL which points to the eln instance.
             user (str): ELN user.
             token (str): ELN access token (or user password).
-            eln_type (str): ELN type, e.g. "cheminfo"
+            eln_type (str): ELN type, e.g. "cheminfo".
         """
         super().__init__(**kwargs)
     
