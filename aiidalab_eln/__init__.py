@@ -1,6 +1,6 @@
-def get_eln_connector(eln_type: str = "cheminfopy"):
+def get_eln_connector(eln_type: str = "cheminfo"):
     if eln_type == "cheminfo":
-        from .eln.cheminfopy import CheminfoElnConnector
+        from .eln.cheminfo import CheminfoElnConnector
         return CheminfoElnConnector
     elif eln_type == "openbis":
         from .eln.openbis import OpenbisElnConnector
