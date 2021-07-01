@@ -1,5 +1,4 @@
 from pytojcamp import from_dict
-from cheminfopy import Sample
 
 
 def export_isotherm(
@@ -64,13 +63,4 @@ def export_cif(
         source_info=source_info,
     )
 
-def object_exporter(obj, eln_instance, sample_uuid, token, filename):
-    sample_manager = Sample(
-        eln_instance,
-        sample_uuid=sample_uuid,
-        token=token,
-    )
-    if obj.node_type == "data.dict.Dict.":
-        export_isotherm(sample_manager, isotherm=obj, adsorptive="N2", filename=filename)
-    elif obj.node_type == "data.cif.CifData.":
-        export_cif(sample_manager, obj, filename=filename) 
+

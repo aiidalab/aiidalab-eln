@@ -7,6 +7,9 @@ from IPython.display import clear_output
 class CheminfoElnConnector(ElnConnector):
     access_token = traitlets.Unicode()
     token_url = traitlets.Unicode()
+    sample_uuid = traitlets.Unicode()
+    file_name = traitlets.Unicode()
+    spectrum_type = traitlets.Unicode()
     
     def __init__(self, **kwargs):
 
@@ -37,7 +40,30 @@ class CheminfoElnConnector(ElnConnector):
         self.button_clicked = True
         request_token_button = ipw.Button(description="Request token")
         request_token_button.on_click(self.request_token)
-        self.output = ipw.Output() 
+        
+        self.sample_uuid_widget = ipw.Text(
+            description="Sample ID:",
+            value="",
+            style={"description_width": "initial"},
+        )
+        traitlets.link((self, "sample_uuid"), (self.sample_uuid_widget, "value"))
+        
+        self.file_name_widget = ipw.Text(
+            description="File name:",
+            value="",
+            style={"description_width": "initial"},
+        )
+        traitlets.link((self, "file_name"), (self.file_name_widget, "value"))
+
+        self.spectrum_type_widget = ipw.Text(
+            description="Spectrum type:",
+            value="",
+            style={"description_width": "initial"},
+        )
+        traitlets.link((self, "spectrum_type"), (self.spectrum_type_widget, "value"))
+        
+        self.output = ipw.Output()
+
         super().__init__(children=[eln_instance_widget, token_widget, token_url_widget, request_token_button, self.output], **kwargs)
         
     def connect(self):
@@ -72,5 +98,31 @@ class CheminfoElnConnector(ElnConnector):
     @traitlets.default("eln_type")
     def set_eln_type(self):
         return "cheminfo"
-    
-    
+
+    def set_sample_config(self, **kwargs):
+        if 'sample_uuid' in kwargs:
+            self.sample_uuid = kwargs['sample_uuid']
+        if 'file_name' in kwargs:
+            self.file_name = kwargs['file_name']
+        if 'spectrum_type' in kwargs:
+            self.spectrum_type = kwargs['spectrum_type']
+        
+    def sample_config_editor(self):
+        return ipw.VBox(
+            [
+                self.sample_uuid_widget,
+                self.file_name_widget,
+                self.spectrum_type_widget,
+            ]
+        )
+
+    def send_data_object(self, data_object):
+        sample_manager = self.session.get_sample(self.sample_uuid)
+
+        if data_object.node_type == "data.dict.Dict.":
+            from .exporter import export_isotherm
+            export_isotherm(sample_manager, isotherm=data_object, adsorptive="N2", filename=self.file_name)
+        elif data_object.node_type == "data.cif.CifData.":
+            from .exporter import export_cif
+            export_cif(sample_manager, data_object, filename=self.file_name)
+
