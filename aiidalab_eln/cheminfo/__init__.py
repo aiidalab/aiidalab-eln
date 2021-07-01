@@ -1,6 +1,6 @@
 import traitlets
 import ipywidgets as ipw
-from . import ElnConnector
+from ..base_connector import ElnConnector
 from cheminfopy import User
 from IPython.display import clear_output
 
