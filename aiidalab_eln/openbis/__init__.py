@@ -1,5 +1,5 @@
 import ipywidgets as ipw
-from . import ElnConnector
+from ..base_connector import ElnConnector
 
 class OpenbisElnConnector(ElnConnector):
     def __init__(self, **kwargs):
