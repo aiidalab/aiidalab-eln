@@ -1,5 +1,7 @@
-import traitlets
+# -*- coding: utf-8 -*-
 import ipywidgets as ipw
+import traitlets
+
 
 class ElnConnector(ipw.VBox):
 
@@ -16,16 +18,23 @@ class ElnConnector(ipw.VBox):
             eln_type (str): ELN type, e.g. "cheminfo".
         """
         super().__init__(**kwargs)
-    
+
     def connect(self):
-        raise NotImplementedError(f"{self.__class__.__name__} does not implement the 'connect' method")
-    
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement the 'connect' method"
+        )
+
     def is_connected(self):
-        raise NotImplementedError(f"{self.__class__.__name__} does not implement the 'is_connected' method")
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement the 'is_connected' method"
+        )
 
     def send_data_object(self, data_object):
-        raise NotImplementedError(f"{self.__class__.__name__} does not implement the 'send_data_object' method")
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement the 'send_data_object' method"
+        )
 
     def get_config(self):
-        raise NotImplementedError(f"{self.__class__.__name__} does not implement the 'get_config' method")
-        
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement the 'get_config' method"
+        )
