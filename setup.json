@@ -15,5 +15,11 @@
     "license": "MIT License",
     "name": "aiidalab_eln",
     "url": "https://github.com/aiidalab/aiidalab-eln",
-    "version": "0.1.0a1"
+    "version": "0.1.0a1",
+    "extras_require": {
+        "pre-commit": [
+                "pre-commit~=2.2",
+                "pylint~=2.6.0"
+        ]
+    }
 }
