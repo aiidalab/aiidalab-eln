@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from pytojcamp import from_dict
 
 
@@ -43,6 +44,7 @@ def export_isotherm(
         source_info=source_info,
     )
 
+
 def export_cif(
     sample_manager,
     cifdata,
@@ -62,5 +64,3 @@ def export_cif(
         filecontent=cifdata._prepare_cif(),
         source_info=source_info,
     )
-
-

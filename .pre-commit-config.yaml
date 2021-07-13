@@ -1,0 +1,54 @@
+# # Install pre-commit hooks via
+# pre-commit install
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.5.0
+    hooks:
+      - id: double-quote-string-fixer
+        exclude: &exclude_files >
+          (?x)^(
+              tests/data/.*|
+              examples/data/.*|
+          )$
+      - id: end-of-file-fixer
+        exclude: *exclude_files
+      - id: fix-encoding-pragma
+        exclude: *exclude_files
+      - id: mixed-line-ending
+        exclude: *exclude_files
+      - id: trailing-whitespace
+        exclude: *exclude_files
+
+  - repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+      - id: black
+        language_version: python3
+        name: black
+        exclude: versioneer.py|pyepal/_version.py|^docs/
+        entry: black
+        types: [python]
+
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: "v5.6.4" # Use the revision sha / tag you want to point at
+    hooks:
+      - id: isort
+        name: isort
+        language: system
+        types: [python]
+        entry: isort
+
+  - repo: local
+    hooks:
+      # prospector: collection of linters
+      - id: pylint
+        name: pylint
+        entry: pylint
+        types: [python]
+        language: system
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0 # Use the ref you want to point at
+    hooks:
+      - id: check-json
