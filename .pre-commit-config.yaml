@@ -3,22 +3,11 @@
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.5.0
+    rev: v3.4.0
     hooks:
-      - id: double-quote-string-fixer
-        exclude: &exclude_files >
-          (?x)^(
-              tests/data/.*|
-              examples/data/.*|
-          )$
-      - id: end-of-file-fixer
-        exclude: *exclude_files
-      - id: fix-encoding-pragma
-        exclude: *exclude_files
-      - id: mixed-line-ending
-        exclude: *exclude_files
+      - id: check-yaml
+      - id: check-json
       - id: trailing-whitespace
-        exclude: *exclude_files
 
   - repo: https://github.com/psf/black
     rev: 20.8b1
@@ -48,7 +37,3 @@ repos:
         types: [python]
         language: system
 
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0 # Use the ref you want to point at
-    hooks:
-      - id: check-json
