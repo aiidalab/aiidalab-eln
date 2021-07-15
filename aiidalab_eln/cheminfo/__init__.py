@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
+"""Module to define the Cheminfo ELN connector for AiiDAlab."""
 import ipywidgets as ipw
 import traitlets
-from IPython.display import clear_output
-
 from cheminfopy import User
+from IPython.display import clear_output, display
 
 from ..base_connector import ElnConnector
+from .exporter import export_cif, export_isotherm
 
 
 class CheminfoElnConnector(ElnConnector):
+    """Cheminfo ELN connector to AiiDAlab."""
+
     access_token = traitlets.Unicode()
     token_url = traitlets.Unicode()
     sample_uuid = traitlets.Unicode()
@@ -92,6 +95,7 @@ class CheminfoElnConnector(ElnConnector):
         }
 
     def request_token(self, _=None):
+        """Request token from the selected Cheminfo ELN."""
         with self.output:
             clear_output()
             if self.button_clicked:
@@ -117,10 +121,11 @@ class CheminfoElnConnector(ElnConnector):
         return False
 
     @traitlets.default("eln_type")
-    def set_eln_type(self):
+    def set_eln_type(self):  # pylint: disable=no-self-use
         return "cheminfo"
 
     def set_sample_config(self, **kwargs):
+        """Set sample-related variables from a config."""
         if "sample_uuid" in kwargs:
             self.sample_uuid = kwargs["sample_uuid"]
         if "file_name" in kwargs:
@@ -141,8 +146,6 @@ class CheminfoElnConnector(ElnConnector):
         sample_manager = self.session.get_sample(self.sample_uuid)
 
         if data_object.node_type == "data.dict.Dict.":
-            from .exporter import export_isotherm
-
             export_isotherm(
                 sample_manager,
                 isotherm=data_object,
@@ -150,6 +153,4 @@ class CheminfoElnConnector(ElnConnector):
                 filename=self.file_name,
             )
         elif data_object.node_type == "data.cif.CifData.":
-            from .exporter import export_cif
-
             export_cif(sample_manager, data_object, filename=self.file_name)

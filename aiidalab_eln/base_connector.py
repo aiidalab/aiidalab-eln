@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Module that defines the base class for ELN connetors."""
 import ipywidgets as ipw
 import traitlets
 
 
 class ElnConnector(ipw.VBox):
+    """Base class for the ELN connectors."""
 
     eln_instance = traitlets.Unicode()
     eln_type = traitlets.Unicode()
@@ -24,6 +26,7 @@ class ElnConnector(ipw.VBox):
             f"{self.__class__.__name__} does not implement the 'connect' method"
         )
 
+    @property
     def is_connected(self):
         raise NotImplementedError(
             f"{self.__class__.__name__} does not implement the 'is_connected' method"
