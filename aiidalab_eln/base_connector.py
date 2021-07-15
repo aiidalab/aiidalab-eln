@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Module that defines the base class for ELN connetors."""
 import ipywidgets as ipw
 import traitlets
@@ -32,7 +31,7 @@ class ElnConnector(ipw.VBox):
             f"{self.__class__.__name__} does not implement the 'is_connected' method"
         )
 
-    def send_data_object(self, data_object):
+    def export_data_object(self, data_object):
         raise NotImplementedError(
             f"{self.__class__.__name__} does not implement the 'send_data_object' method"
         )

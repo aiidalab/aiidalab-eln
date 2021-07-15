@@ -1,17 +1,21 @@
-# -*- coding: utf-8 -*-
 """Module to define the Cheminfo ELN connector for AiiDAlab."""
+
 import ipywidgets as ipw
 import traitlets
+from aiida.orm import Node
+from aiida.plugins import DataFactory
 from cheminfopy import User
 from IPython.display import clear_output, display
 
 from ..base_connector import ElnConnector
 from .exporter import export_cif, export_isotherm
+from .importer import import_cif, import_pdb
 
 
 class CheminfoElnConnector(ElnConnector):
     """Cheminfo ELN connector to AiiDAlab."""
 
+    node = traitlets.Instance(Node, allow_none=True)
     access_token = traitlets.Unicode()
     token_url = traitlets.Unicode()
     sample_uuid = traitlets.Unicode()
@@ -104,7 +108,7 @@ class CheminfoElnConnector(ElnConnector):
                         f"""
                 Once it appears, copy the text from the frame below, and insert it to the "Token" field above.
                 <br/>
-                <iframe src="{self.token_url}" width="400" height="100"></iframe>
+                <iframe src="{self.token_url}" width="400" height="300"></iframe>
                 """
                     )
                 )
@@ -142,10 +146,13 @@ class CheminfoElnConnector(ElnConnector):
             ]
         )
 
-    def send_data_object(self, data_object):
+    def export_data_object(self, data_object):
+
         sample_manager = self.session.get_sample(self.sample_uuid)
 
+        # Choose the data type.
         if data_object.node_type == "data.dict.Dict.":
+
             export_isotherm(
                 sample_manager,
                 isotherm=data_object,
@@ -153,4 +160,29 @@ class CheminfoElnConnector(ElnConnector):
                 filename=self.file_name,
             )
         elif data_object.node_type == "data.cif.CifData.":
+
             export_cif(sample_manager, data_object, filename=self.file_name)
+
+    def import_data_object(self):
+        """Import data object from Cheminfo ELN to AiiDAlab."""
+        sample = self.session.get_sample(self.sample_uuid)
+
+        # Choose the data type.
+        if self.spectrum_type == "xray":
+            if self.file_name.split(".")[-1] == "cif":
+                self.node = import_cif(sample, file_name=self.file_name)
+            elif self.file_name.split(".")[-1] == "pdb":
+                self.node = import_pdb(sample, file_name=self.file_name)
+            else:
+                raise Exception("Unknown file format.")
+
+        # Add extra information.
+        eln_info = {
+            "eln_instance": self.eln_instance,
+            "eln_type": "cheminfo",
+            "sample_uuid": self.sample_uuid,
+            "spectrum_type": self.spectrum_type,
+            "file_name": self.file_name,
+        }
+        self.node.set_extra("eln", eln_info)
+        self.node.store()
