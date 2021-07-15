@@ -10,7 +10,8 @@
         "aiida-core>=1.1.0,<2.0.0",
     "requests",
     "pytojcamp",
-    "cheminfopy"
+    "cheminfopy",
+    "ipywidgets"
     ],
     "license": "MIT License",
     "name": "aiidalab_eln",
