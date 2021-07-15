@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Export AiiDA objects to the Cheminfo ELN."""
+
 from pytojcamp import from_dict
 
 
@@ -9,6 +11,7 @@ def export_isotherm(
     filename: str = None,
     aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
 ):
+    """Export Isotherm object."""
     source_info = {
         "uuid": isotherm.uuid,
         "url": aiidalab_instance,
@@ -51,6 +54,7 @@ def export_cif(
     filename: str = None,
     aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
 ):
+    """Export CIF object."""
 
     source_info = {
         "uuid": cifdata.uuid,
@@ -61,6 +65,6 @@ def export_cif(
     sample_manager.put_spectrum(
         spectrum_type="xray",
         name=f"{cifdata.uuid}.cif" if filename is None else f"{filename}.cif",
-        filecontent=cifdata._prepare_cif(),
+        filecontent=cifdata._prepare_cif(),  # pylint: disable=protected-access
         source_info=source_info,
     )

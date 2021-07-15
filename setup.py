@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Describe the module distribution to the Distutils."""
 import json
 
 from setuptools import find_packages, setup
