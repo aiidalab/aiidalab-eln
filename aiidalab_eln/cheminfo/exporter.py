@@ -59,7 +59,7 @@ def export_cif(
     source_info = {
         "uuid": cifdata.uuid,
         "url": aiidalab_instance,
-        "name": "Structure optimized using the XXX app on AiiDAlab",
+        "name": "Structure optimized on AiiDAlab",
     }
 
     sample_manager.put_spectrum(
