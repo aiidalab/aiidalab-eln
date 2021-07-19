@@ -5,14 +5,14 @@
         "Operating System :: MacOS :: MacOS X",
         "Programming Language :: Python :: 3"
     ],
-    "description": "Package that integrates AiiDAlab with Electronic Laboratory Notebook.",
+    "description": "Package that integrates AiiDAlab with Electronic Laboratory Notebooks.",
     "install_requires": [
-	    "aiida-core>=1.1.0,<2.0.0",
-	    "ase",
-	    "requests",
-	    "pytojcamp",
-	    "cheminfopy",
-	    "ipywidgets"
+        "aiida-core>=1.1.0,<2.0.0",
+        "ase",
+        "requests",
+        "pytojcamp",
+        "cheminfopy>=0.4",
+        "ipywidgets"
     ],
     "license": "MIT License",
     "name": "aiidalab_eln",
