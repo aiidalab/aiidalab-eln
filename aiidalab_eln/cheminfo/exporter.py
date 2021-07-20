@@ -5,7 +5,7 @@ from pytojcamp import from_dict
 
 
 def export_isotherm(
-    sample_manager,
+    sample,
     isotherm,
     adsorptive: str,
     filename: str = None,
@@ -39,8 +39,8 @@ def export_isotherm(
         meta=meta,
     )
     name = f"{isotherm.uuid}.jcamp" if filename is None else f"{filename}.jcamp"
-    sample_manager.put_spectrum(
-        spectrum_type="isotherm",
+    sample.put_data(
+        data_type="isotherm",
         name=name,
         filecontent=jcamp,
         metadata=meta,
@@ -49,7 +49,7 @@ def export_isotherm(
 
 
 def export_cif(
-    sample_manager,
+    sample,
     cifdata,
     filename: str = None,
     aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
@@ -62,8 +62,8 @@ def export_cif(
         "name": "Structure optimized on AiiDAlab",
     }
 
-    sample_manager.put_spectrum(
-        spectrum_type="xray",
+    sample.put_data(
+        data_type="xray",
         name=f"{cifdata.uuid}.cif" if filename is None else f"{filename}.cif",
         filecontent=cifdata._prepare_cif(),  # pylint: disable=protected-access
         source_info=source_info,

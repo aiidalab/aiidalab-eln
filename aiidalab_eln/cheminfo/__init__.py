@@ -18,7 +18,7 @@ class CheminfoElnConnector(ElnConnector):
     """Cheminfo ELN connector to AiiDAlab."""
 
     node = traitlets.Instance(Node, allow_none=True)
-    access_token = traitlets.Unicode()
+    token = traitlets.Unicode()
     token_url_base = "https://www.cheminfo.org/flavor/tools/Token/index.html?rocUrl="
     sample_uuid = traitlets.Unicode()
     file_name = traitlets.Unicode()
@@ -41,9 +41,11 @@ class CheminfoElnConnector(ElnConnector):
             placeholder='Press the "Request token" button below',
             style={"description_width": "initial"},
         )
-        traitlets.link((self, "access_token"), (token_widget, "value"))
+        traitlets.link((self, "token"), (token_widget, "value"))
 
-        self.button_clicked = True
+        self.button_clicked = (
+            True  # Boolean to switch on and off the token request window.
+        )
         request_token_button = ipw.Button(description="Request token")
         request_token_button.on_click(self.request_token)
 
@@ -82,13 +84,13 @@ class CheminfoElnConnector(ElnConnector):
 
     def connect(self):
         """Connect to the cheminfo ELN."""
-        self.session = User(instance=self.eln_instance, token=self.access_token)
+        self.session = User(instance=self.eln_instance, token=self.token)
 
     def get_config(self):
         return {
             "eln_instance": self.eln_instance,
             "eln_type": self.eln_type,
-            "access_token": self.access_token,
+            "token": self.token,
         }
 
     def request_token(self, _=None):
@@ -124,12 +126,9 @@ class CheminfoElnConnector(ElnConnector):
 
     def set_sample_config(self, **kwargs):
         """Set sample-related variables from a config."""
-        if "sample_uuid" in kwargs:
-            self.sample_uuid = kwargs["sample_uuid"]
-        if "file_name" in kwargs:
-            self.file_name = kwargs["file_name"]
-        if "data_type" in kwargs:
-            self.data_type = kwargs["data_type"]
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
     def sample_config_editor(self):
         return ipw.VBox(
@@ -140,23 +139,24 @@ class CheminfoElnConnector(ElnConnector):
             ]
         )
 
-    def export_data_object(self, data_object):
+    def export_data(self):
+        """Export AiiDA object (node attribute of this class) to ELN."""
 
-        sample_manager = self.session.get_sample(self.sample_uuid)
+        sample = self.session.get_sample(self.sample_uuid)
 
         # Choose the data type.
-        if data_object.node_type == "data.dict.Dict.":
+        if self.node.node_type == "data.dict.Dict.":
 
             export_isotherm(
-                sample_manager,
-                isotherm=data_object,
+                sample,
+                isotherm=self.node,
                 adsorptive="N2",
                 filename=self.file_name,
             )
-        elif data_object.node_type == "data.cif.CifData.":
-            export_cif(sample_manager, data_object, filename=self.file_name)
+        elif self.node.node_type == "data.cif.CifData.":
+            export_cif(sample, self.node, filename=self.file_name)
 
-    def import_data_object(self):
+    def import_data(self):
         """Import data object from Cheminfo ELN to AiiDAlab."""
         sample = self.session.get_sample(self.sample_uuid)
 
