@@ -30,7 +30,7 @@ class CheminfoElnConnector(ElnConnector):
 
         eln_instance_widget = ipw.Text(
             description="ELN address:",
-            value="",
+            value="https://mydb.cheminfo.org/",
             style={"description_width": "initial"},
         )
         traitlets.link((self, "eln_instance"), (eln_instance_widget, "value"))
@@ -96,7 +96,7 @@ class CheminfoElnConnector(ElnConnector):
         with self.output:
             clear_output()
             if self.button_clicked:
-                token_url = urllib.parse.quote(self.token_url_base + self.eln_instance)
+                token_url = self.token_url_base + urllib.parse.quote(self.eln_instance)
                 display(
                     ipw.HTML(
                         f"""
@@ -154,7 +154,6 @@ class CheminfoElnConnector(ElnConnector):
                 filename=self.file_name,
             )
         elif data_object.node_type == "data.cif.CifData.":
-
             export_cif(sample_manager, data_object, filename=self.file_name)
 
     def import_data_object(self):
