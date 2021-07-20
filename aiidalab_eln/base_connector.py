@@ -31,9 +31,14 @@ class ElnConnector(ipw.VBox):
             f"{self.__class__.__name__} does not implement the 'is_connected' method"
         )
 
-    def export_data_object(self, data_object):
+    def export_data(self):
         raise NotImplementedError(
-            f"{self.__class__.__name__} does not implement the 'send_data_object' method"
+            f"{self.__class__.__name__} does not implement the 'export_data' method"
+        )
+
+    def import_data(self):
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement the 'import_data' method"
         )
 
     def get_config(self):
