@@ -11,7 +11,7 @@
         "ase",
         "requests",
         "pytojcamp",
-        "cheminfopy>=0.4",
+        "cheminfopy>=0.5.1",
         "ipywidgets"
     ],
     "license": "MIT License",
