@@ -1,5 +1,7 @@
 """Module to define the Cheminfo ELN connector for AiiDAlab."""
 
+import urllib
+
 import ipywidgets as ipw
 import traitlets
 from aiida.orm import Node
@@ -17,10 +19,10 @@ class CheminfoElnConnector(ElnConnector):
 
     node = traitlets.Instance(Node, allow_none=True)
     access_token = traitlets.Unicode()
-    token_url = traitlets.Unicode()
+    token_url_base = "https://www.cheminfo.org/flavor/tools/Token/index.html?rocUrl="
     sample_uuid = traitlets.Unicode()
     file_name = traitlets.Unicode()
-    spectrum_type = traitlets.Unicode()
+    data_type = traitlets.Unicode()
 
     def __init__(self, **kwargs):
 
@@ -28,7 +30,7 @@ class CheminfoElnConnector(ElnConnector):
 
         eln_instance_widget = ipw.Text(
             description="ELN address:",
-            value="",
+            value="https://mydb.cheminfo.org/",
             style={"description_width": "initial"},
         )
         traitlets.link((self, "eln_instance"), (eln_instance_widget, "value"))
@@ -40,13 +42,6 @@ class CheminfoElnConnector(ElnConnector):
             style={"description_width": "initial"},
         )
         traitlets.link((self, "access_token"), (token_widget, "value"))
-
-        token_url_widget = ipw.Text(
-            description="Token URL:",
-            value="",
-            style={"description_width": "initial"},
-        )
-        traitlets.link((self, "token_url"), (token_url_widget, "value"))
 
         self.button_clicked = True
         request_token_button = ipw.Button(description="Request token")
@@ -66,12 +61,12 @@ class CheminfoElnConnector(ElnConnector):
         )
         traitlets.link((self, "file_name"), (self.file_name_widget, "value"))
 
-        self.spectrum_type_widget = ipw.Text(
-            description="Spectrum type:",
+        self.data_type_widget = ipw.Text(
+            description="Data type:",
             value="",
             style={"description_width": "initial"},
         )
-        traitlets.link((self, "spectrum_type"), (self.spectrum_type_widget, "value"))
+        traitlets.link((self, "data_type"), (self.data_type_widget, "value"))
 
         self.output = ipw.Output()
 
@@ -79,7 +74,6 @@ class CheminfoElnConnector(ElnConnector):
             children=[
                 eln_instance_widget,
                 token_widget,
-                token_url_widget,
                 request_token_button,
                 self.output,
             ],
@@ -95,7 +89,6 @@ class CheminfoElnConnector(ElnConnector):
             "eln_instance": self.eln_instance,
             "eln_type": self.eln_type,
             "access_token": self.access_token,
-            "token_url": self.token_url,
         }
 
     def request_token(self, _=None):
@@ -103,12 +96,13 @@ class CheminfoElnConnector(ElnConnector):
         with self.output:
             clear_output()
             if self.button_clicked:
+                token_url = self.token_url_base + urllib.parse.quote(self.eln_instance)
                 display(
                     ipw.HTML(
                         f"""
                 Once it appears, copy the text from the frame below, and insert it to the "Token" field above.
                 <br/>
-                <iframe src="{self.token_url}" width="400" height="300"></iframe>
+                <iframe src="{token_url}" width="400" height="300"></iframe>
                 """
                     )
                 )
@@ -134,15 +128,15 @@ class CheminfoElnConnector(ElnConnector):
             self.sample_uuid = kwargs["sample_uuid"]
         if "file_name" in kwargs:
             self.file_name = kwargs["file_name"]
-        if "spectrum_type" in kwargs:
-            self.spectrum_type = kwargs["spectrum_type"]
+        if "data_type" in kwargs:
+            self.data_type = kwargs["data_type"]
 
     def sample_config_editor(self):
         return ipw.VBox(
             [
                 self.sample_uuid_widget,
                 self.file_name_widget,
-                self.spectrum_type_widget,
+                self.data_type_widget,
             ]
         )
 
@@ -160,7 +154,6 @@ class CheminfoElnConnector(ElnConnector):
                 filename=self.file_name,
             )
         elif data_object.node_type == "data.cif.CifData.":
-
             export_cif(sample_manager, data_object, filename=self.file_name)
 
     def import_data_object(self):
@@ -168,7 +161,7 @@ class CheminfoElnConnector(ElnConnector):
         sample = self.session.get_sample(self.sample_uuid)
 
         # Choose the data type.
-        if self.spectrum_type == "xray":
+        if self.data_type == "xray":
             if self.file_name.split(".")[-1] == "cif":
                 self.node = import_cif(sample, file_name=self.file_name)
             elif self.file_name.split(".")[-1] == "pdb":
@@ -181,7 +174,7 @@ class CheminfoElnConnector(ElnConnector):
             "eln_instance": self.eln_instance,
             "eln_type": "cheminfo",
             "sample_uuid": self.sample_uuid,
-            "spectrum_type": self.spectrum_type,
+            "data_type": self.data_type,
             "file_name": self.file_name,
         }
         self.node.set_extra("eln", eln_info)
