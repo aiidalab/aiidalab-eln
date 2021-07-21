@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Export AiiDA objects to the Cheminfo ELN."""
 
+from aiida import orm
+from aiida.plugins import WorkflowFactory
 from pytojcamp import from_dict
 
 
@@ -16,8 +18,20 @@ def export_isotherm(
         "url": aiidalab_instance,
         "name": "Isotherm simulated using the isotherm app on AiiDAlab",
     }
+
+    # Workaround till the Isotherm object is not ready.
+    isotherm_wf = WorkflowFactory("lsmo.isotherm")
+    query = (
+        orm.QueryBuilder()
+        .append(orm.Dict, filters={"uuid": node.uuid}, tag="isotherm_data")
+        .append(isotherm_wf, with_outgoing="isotherm_data", tag="isotherm_wf")
+        .append(orm.Str, with_outgoing="isotherm_wf", project="attributes.value")
+    )
+    adsorptive = query.all(flat=True)
+    adsorptive = adsorptive[0] if adsorptive else None
+
     meta = {
-        "adsorptive": "N2",
+        "adsorptive": adsorptive,
         "temperature": node["temperature"],
         "method": "GCMC",
     }
