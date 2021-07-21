@@ -63,13 +63,6 @@ class CheminfoElnConnector(ElnConnector):
         )
         traitlets.link((self, "file_name"), (self.file_name_widget, "value"))
 
-        self.data_type_widget = ipw.Text(
-            description="Data type:",
-            value="",
-            style={"description_width": "initial"},
-        )
-        traitlets.link((self, "data_type"), (self.data_type_widget, "value"))
-
         self.output = ipw.Output()
 
         super().__init__(
@@ -135,7 +128,6 @@ class CheminfoElnConnector(ElnConnector):
             [
                 self.sample_uuid_widget,
                 self.file_name_widget,
-                self.data_type_widget,
             ]
         )
 
@@ -146,14 +138,19 @@ class CheminfoElnConnector(ElnConnector):
 
         # Choose the data type.
         if self.node.node_type == "data.dict.Dict.":
-
             export_isotherm(
                 sample,
-                node=self.node,
-                file_name=self.file_name,
+                self.node,
+                self.file_name,
+                aiidalab_instance=self.aiidalab_instance,
             )
         elif self.node.node_type == "data.cif.CifData.":
-            export_cif(sample, self.node, file_name=self.file_name)
+            export_cif(
+                sample,
+                self.node,
+                self.file_name,
+                aiidalab_instance=self.aiidalab_instance,
+            )
 
     def import_data(self):
         """Import data object from cheminfo ELN to AiiDAlab."""
@@ -162,9 +159,15 @@ class CheminfoElnConnector(ElnConnector):
         # Choose the data type.
         if self.data_type == "xray":
             if self.file_name.split(".")[-1] == "cif":
-                self.node = import_cif(sample, file_name=self.file_name)
+                self.node = import_cif(
+                    sample,
+                    file_name=self.file_name,
+                )
             elif self.file_name.split(".")[-1] == "pdb":
-                self.node = import_pdb(sample, file_name=self.file_name)
+                self.node = import_pdb(
+                    sample,
+                    file_name=self.file_name,
+                )
             else:
                 raise Exception("Unknown file format.")
 

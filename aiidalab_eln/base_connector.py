@@ -6,6 +6,7 @@ import traitlets
 class ElnConnector(ipw.VBox):
     """Base class for the ELN connectors."""
 
+    aiidalab_instance = traitlets.Unicode()
     eln_instance = traitlets.Unicode()
     eln_type = traitlets.Unicode()
 

@@ -10,7 +10,7 @@ def export_isotherm(
     sample,
     node,
     file_name: str = None,
-    aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
+    aiidalab_instance: str = "unknown",
 ):
     """Export Isotherm object."""
     source_info = {
@@ -64,7 +64,7 @@ def export_cif(
     sample,
     node,
     file_name: str = None,
-    aiidalab_instance: str = "https://aiidalab-demo.materialscloud.org",
+    aiidalab_instance: str = "unknown",
 ):
     """Export CIF object."""
 
