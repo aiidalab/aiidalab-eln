@@ -7,7 +7,7 @@ from ase.io import read
 
 
 def import_cif(sample, **kwargs):
-    """Import CIF object from Cheminfo sample to AiiDAlab node."""
+    """Import CIF object from sample in cheminfo ELN to AiiDA node."""
     object_type = DataFactory("cif")
     file_content = sample.get_data(data_type="xray", file_name=kwargs["file_name"])
     file_object = io.BytesIO(bytes(file_content, "utf8"))
@@ -16,7 +16,7 @@ def import_cif(sample, **kwargs):
 
 
 def import_pdb(sample, **kwargs):
-    """Import PDB object from Cheminfo sample to AiiDAlab node."""
+    """Import PDB object from sample in cheminfo ELN to AiiDA node."""
     object_type = DataFactory("structure")
     file_content = sample.get_data(data_type="xray", file_name=kwargs["file_name"])
     file_object = io.BytesIO(bytes(file_content, "utf8"))

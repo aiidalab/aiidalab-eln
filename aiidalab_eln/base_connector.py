@@ -13,8 +13,8 @@ class ElnConnector(ipw.VBox):
         """Connect to an ELN
 
         Args:
-            eln_instance (str): URL which points to the eln instance.
-            eln_type (str): ELN type, e.g. "cheminfo".
+            eln_instance (str): URL which points to the ELN instance.
+            eln_type (str): ELN type, e.g. "cheminfo" or "openbis".
         """
         super().__init__(**kwargs)
 

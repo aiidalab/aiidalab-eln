@@ -156,7 +156,7 @@ class CheminfoElnConnector(ElnConnector):
             export_cif(sample, self.node, file_name=self.file_name)
 
     def import_data(self):
-        """Import data object from Cheminfo ELN to AiiDAlab."""
+        """Import data object from cheminfo ELN to AiiDAlab."""
         sample = self.session.get_sample(self.sample_uuid)
 
         # Choose the data type.
