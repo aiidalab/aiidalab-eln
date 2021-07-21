@@ -149,15 +149,14 @@ class CheminfoElnConnector(ElnConnector):
 
             export_isotherm(
                 sample,
-                isotherm=self.node,
-                adsorptive="N2",
-                filename=self.file_name,
+                node=self.node,
+                file_name=self.file_name,
             )
         elif self.node.node_type == "data.cif.CifData.":
-            export_cif(sample, self.node, filename=self.file_name)
+            export_cif(sample, self.node, file_name=self.file_name)
 
     def import_data(self):
-        """Import data object from Cheminfo ELN to AiiDAlab."""
+        """Import data object from cheminfo ELN to AiiDAlab."""
         sample = self.session.get_sample(self.sample_uuid)
 
         # Choose the data type.
