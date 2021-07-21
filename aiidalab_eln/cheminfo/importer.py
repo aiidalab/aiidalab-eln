@@ -9,16 +9,16 @@ from ase.io import read
 def import_cif(sample, **kwargs):
     """Import CIF object from Cheminfo sample to AiiDAlab node."""
     object_type = DataFactory("cif")
-    content = sample.get_data(data_type="xray", name=kwargs["file_name"])
-    file = io.BytesIO(bytes(content, "utf8"))
-    node = object_type(file=file)
+    file_content = sample.get_data(data_type="xray", file_name=kwargs["file_name"])
+    file_object = io.BytesIO(bytes(file_content, "utf8"))
+    node = object_type(file=file_object)
     return node
 
 
 def import_pdb(sample, **kwargs):
     """Import PDB object from Cheminfo sample to AiiDAlab node."""
     object_type = DataFactory("structure")
-    content = sample.get_data(data_type="xray", name=kwargs["file_name"])
-    file = io.BytesIO(bytes(content, "utf8"))
-    node = object_type(from_ase=read(file))
+    file_content = sample.get_data(data_type="xray", file_name=kwargs["file_name"])
+    file_object = io.BytesIO(bytes(file_content, "utf8"))
+    node = object_type(from_ase=read(file_object))
     return node
