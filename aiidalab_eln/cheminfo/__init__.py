@@ -4,6 +4,7 @@ import pathlib
 import urllib
 
 import ipywidgets as ipw
+import requests_cache
 import traitlets
 from aiida.orm import Node
 from aiida.plugins import DataFactory
@@ -134,24 +135,27 @@ class CheminfoElnConnector(ElnConnector):
 
     def export_data(self):
         """Export AiiDA object (node attribute of this class) to ELN."""
+        # We need to make sure that caching is disabled for PUT requests
+        # otherwise, documents are not correctly updated on multiple
+        # subsequent requests
+        with requests_cache.disabled():
+            sample = self.session.get_sample(self.sample_uuid)
 
-        sample = self.session.get_sample(self.sample_uuid)
-
-        # Choose the data type.
-        if self.node.node_type == "data.dict.Dict.":
-            export_isotherm(
-                sample,
-                self.node,
-                self.file_name,
-                aiidalab_instance=self.aiidalab_instance,
-            )
-        elif self.node.node_type == "data.cif.CifData.":
-            export_cif(
-                sample,
-                self.node,
-                self.file_name,
-                aiidalab_instance=self.aiidalab_instance,
-            )
+            # Choose the data type.
+            if self.node.node_type == "data.dict.Dict.":
+                export_isotherm(
+                    sample,
+                    self.node,
+                    self.file_name,
+                    aiidalab_instance=self.aiidalab_instance,
+                )
+            elif self.node.node_type == "data.cif.CifData.":
+                export_cif(
+                    sample,
+                    self.node,
+                    self.file_name,
+                    aiidalab_instance=self.aiidalab_instance,
+                )
 
     def import_data(self):
         """Import data object from cheminfo ELN to AiiDAlab."""
