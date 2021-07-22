@@ -1,5 +1,6 @@
 """Module to define the Cheminfo ELN connector for AiiDAlab."""
 
+import pathlib
 import urllib
 
 import ipywidgets as ipw
@@ -62,13 +63,6 @@ class CheminfoElnConnector(ElnConnector):
             style={"description_width": "initial"},
         )
         traitlets.link((self, "file_name"), (self.file_name_widget, "value"))
-
-        self.data_type_widget = ipw.Text(
-            description="Data type:",
-            value="",
-            style={"description_width": "initial"},
-        )
-        traitlets.link((self, "data_type"), (self.data_type_widget, "value"))
 
         self.output = ipw.Output()
 
@@ -135,7 +129,6 @@ class CheminfoElnConnector(ElnConnector):
             [
                 self.sample_uuid_widget,
                 self.file_name_widget,
-                self.data_type_widget,
             ]
         )
 
@@ -146,35 +139,49 @@ class CheminfoElnConnector(ElnConnector):
 
         # Choose the data type.
         if self.node.node_type == "data.dict.Dict.":
-
             export_isotherm(
                 sample,
-                node=self.node,
-                file_name=self.file_name,
+                self.node,
+                self.file_name,
+                aiidalab_instance=self.aiidalab_instance,
             )
         elif self.node.node_type == "data.cif.CifData.":
-            export_cif(sample, self.node, file_name=self.file_name)
+            export_cif(
+                sample,
+                self.node,
+                self.file_name,
+                aiidalab_instance=self.aiidalab_instance,
+            )
 
     def import_data(self):
         """Import data object from cheminfo ELN to AiiDAlab."""
         sample = self.session.get_sample(self.sample_uuid)
+        fpath = pathlib.Path(self.file_name)
 
         # Choose the data type.
         if self.data_type == "xray":
-            if self.file_name.split(".")[-1] == "cif":
-                self.node = import_cif(sample, file_name=self.file_name)
-            elif self.file_name.split(".")[-1] == "pdb":
-                self.node = import_pdb(sample, file_name=self.file_name)
+            if fpath.suffix == ".cif":
+                self.node = import_cif(
+                    sample,
+                    file_name=self.file_name,
+                )
+            elif fpath.suffix == ".pdb":
+                self.node = import_pdb(
+                    sample,
+                    file_name=self.file_name,
+                )
             else:
-                raise Exception("Unknown file format.")
+                raise NotImplementedError(
+                    f'Importer for the data type "{self.data_type}" is not yet implemented.'
+                )
 
         # Add extra information.
         eln_info = {
             "eln_instance": self.eln_instance,
-            "eln_type": "cheminfo",
+            "eln_type": self.eln_type,
             "sample_uuid": self.sample_uuid,
             "data_type": self.data_type,
-            "file_name": self.file_name,
+            "file_name": fpath.stem,
         }
         self.node.set_extra("eln", eln_info)
         self.node.store()
