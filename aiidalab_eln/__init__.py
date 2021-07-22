@@ -8,3 +8,6 @@ def get_eln_connector(eln_type: str = "cheminfo"):
     if eln_type == "cheminfo":
         return CheminfoElnConnector
     raise Exception(f"The selected ELN connector type ({eln_type}) is not known.")
+
+
+__version__ = "0.1.0"
