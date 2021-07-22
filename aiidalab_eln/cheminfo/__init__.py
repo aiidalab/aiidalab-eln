@@ -7,7 +7,7 @@ import ipywidgets as ipw
 import traitlets
 from aiida.orm import Node
 from aiida.plugins import DataFactory
-from cheminfopy import User
+from cheminfopy import User, errors
 from IPython.display import clear_output, display
 
 from ..base_connector import ElnConnector
@@ -78,7 +78,11 @@ class CheminfoElnConnector(ElnConnector):
 
     def connect(self):
         """Connect to the cheminfo ELN."""
-        self.session = User(instance=self.eln_instance, token=self.token)
+        try:
+            self.session = User(instance=self.eln_instance, token=self.token)
+            return ""
+        except errors.InvalidInstanceUrlError:
+            return "The ELN address seems to be wrong."
 
     def get_config(self):
         return {
@@ -121,7 +125,7 @@ class CheminfoElnConnector(ElnConnector):
     def set_sample_config(self, **kwargs):
         """Set sample-related variables from a config."""
         for key, value in kwargs.items():
-            if hasattr(self, key):
+            if hasattr(self, key) and key in ("file_name", "sample_uuid"):
                 setattr(self, key, value)
 
     def sample_config_editor(self):

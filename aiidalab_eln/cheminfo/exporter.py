@@ -77,6 +77,6 @@ def export_cif(
     sample.put_data(
         data_type="xray",
         file_name=f"{node.uuid}.cif" if file_name is None else f"{file_name}.cif",
-        file_content=node._prepare_cif(),  # pylint: disable=protected-access
+        file_content=node._prepare_cif()[0],  # pylint: disable=protected-access
         source_info=source_info,
     )
