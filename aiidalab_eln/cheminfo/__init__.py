@@ -1,5 +1,6 @@
 """Module to define the Cheminfo ELN connector for AiiDAlab."""
 
+import pathlib
 import urllib
 
 import ipywidgets as ipw
@@ -155,29 +156,32 @@ class CheminfoElnConnector(ElnConnector):
     def import_data(self):
         """Import data object from cheminfo ELN to AiiDAlab."""
         sample = self.session.get_sample(self.sample_uuid)
+        fpath = pathlib.Path(self.file_name)
 
         # Choose the data type.
         if self.data_type == "xray":
-            if self.file_name.split(".")[-1] == "cif":
+            if fpath.suffix == ".cif":
                 self.node = import_cif(
                     sample,
                     file_name=self.file_name,
                 )
-            elif self.file_name.split(".")[-1] == "pdb":
+            elif fpath.suffix == ".pdb":
                 self.node = import_pdb(
                     sample,
                     file_name=self.file_name,
                 )
             else:
-                raise Exception("Unknown file format.")
+                raise NotImplementedError(
+                    f'Importer for the data type "{self.data_type}" is not yet implemented.'
+                )
 
         # Add extra information.
         eln_info = {
             "eln_instance": self.eln_instance,
-            "eln_type": "cheminfo",
+            "eln_type": self.eln_type,
             "sample_uuid": self.sample_uuid,
             "data_type": self.data_type,
-            "file_name": self.file_name,
+            "file_name": fpath.stem,
         }
         self.node.set_extra("eln", eln_info)
         self.node.store()
