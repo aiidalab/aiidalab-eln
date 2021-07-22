@@ -12,7 +12,8 @@
         "requests",
         "pytojcamp",
         "cheminfopy>=0.6.0",
-        "ipywidgets"
+        "ipywidgets",
+        "requests_cache"
     ],
     "license": "MIT License",
     "name": "aiidalab_eln",
