@@ -20,7 +20,6 @@ class CheminfoElnConnector(ElnConnector):
 
     node = traitlets.Instance(Node, allow_none=True)
     token = traitlets.Unicode()
-    token_url_base = "https://www.cheminfo.org/flavor/tools/Token/index.html?rocUrl="
     sample_uuid = traitlets.Unicode()
     file_name = traitlets.Unicode()
     data_type = traitlets.Unicode()
@@ -96,7 +95,7 @@ class CheminfoElnConnector(ElnConnector):
         with self.output:
             clear_output()
             if self.button_clicked:
-                token_url = self.token_url_base + urllib.parse.quote(self.eln_instance)
+                token_url = urllib.parse.quote(self.eln_instance) + "/misc/token/"
                 display(
                     ipw.HTML(
                         f"""
