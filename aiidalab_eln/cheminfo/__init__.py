@@ -8,7 +8,7 @@ import traitlets
 from aiida.orm import Node
 from aiida.plugins import DataFactory
 from cheminfopy import User, errors
-from IPython.display import clear_output, display
+from IPython.display import Javascript, clear_output, display
 
 from ..base_connector import ElnConnector
 from .exporter import export_cif, export_isotherm
@@ -46,7 +46,9 @@ class CheminfoElnConnector(ElnConnector):
         self.button_clicked = (
             True  # Boolean to switch on and off the token request window.
         )
-        request_token_button = ipw.Button(description="Request token")
+        request_token_button = ipw.Button(
+            description="Request token (will open new tab/window)"
+        )
         request_token_button.on_click(self.request_token)
 
         self.sample_uuid_widget = ipw.Text(
@@ -96,15 +98,7 @@ class CheminfoElnConnector(ElnConnector):
             clear_output()
             if self.button_clicked:
                 token_url = urllib.parse.quote(self.eln_instance) + "/misc/token/"
-                display(
-                    ipw.HTML(
-                        f"""
-                Once it appears, copy the text from the frame below, and insert it to the "Token" field above.
-                <br/>
-                <iframe src="{token_url}" width="400" height="300"></iframe>
-                """
-                    )
-                )
+                display(Javascript('window.open("{url}");'.format(url=token_url)))
         self.button_clicked = not self.button_clicked
 
     @property
