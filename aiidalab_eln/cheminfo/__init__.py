@@ -44,8 +44,7 @@ class CheminfoElnConnector(ElnConnector):
         traitlets.link((self, "token"), (token_widget, "value"))
 
         request_token_button = ipw.Button(
-            description="Request token",
-            tooltip="Will open new tab/window."
+            description="Request token", tooltip="Will open new tab/window."
         )
         request_token_button.on_click(self.request_token)
 
