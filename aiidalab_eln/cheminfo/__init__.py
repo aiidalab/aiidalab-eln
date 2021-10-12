@@ -70,6 +70,11 @@ class CheminfoElnConnector(ElnConnector):
                 token_widget,
                 request_token_button,
                 self.output,
+                ipw.HTML(
+                    value="You can find more information about the integration with the cheminfo ELN in \
+                        <a href='https://docs.c6h6.org/docs/eln/uuid/07223c3391c6b0cde342518d240d3426#integration-with-molecular-and-atomistic-simulations'>\
+                        the documentation</a>."
+                ),
             ],
             **kwargs,
         )
