@@ -43,9 +43,6 @@ class CheminfoElnConnector(ElnConnector):
         )
         traitlets.link((self, "token"), (token_widget, "value"))
 
-        self.button_clicked = (
-            True  # Boolean to switch on and off the token request window.
-        )
         request_token_button = ipw.Button(
             description="Request token (will open new tab/window)"
         )
@@ -94,12 +91,8 @@ class CheminfoElnConnector(ElnConnector):
 
     def request_token(self, _=None):
         """Request token from the selected Cheminfo ELN."""
-        with self.output:
-            clear_output()
-            if self.button_clicked:
-                token_url = urllib.parse.quote(self.eln_instance) + "/misc/token/"
-                display(Javascript('window.open("{url}");'.format(url=token_url)))
-        self.button_clicked = not self.button_clicked
+        token_url = self.eln_instance + "/misc/token/"
+        display(Javascript('window.open("{url}");'.format(url=token_url)))
 
     @property
     def is_connected(self):
