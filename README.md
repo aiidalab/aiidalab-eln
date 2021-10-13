@@ -17,7 +17,7 @@ The ELN and integration can be tested via the [public deployment of the ELN](c6h
 - `sample_uuid` refers to the sample unique identifier in the ELN database
 - `file_name` refers to the name of the file attached to the sample and containing information of the specified `data_type`.
 - `file_content` refers to the content of the file attached to the sample.
-- `node` refers to the AiiDA database node. 
+- `node` refers to the AiiDA database node.
 - `token` refers to the token that gives access to the ELN database.
 - `export_data()` sends the AiiDA node (stored in the `node` attribute) to the ELN.
 - `import_data()` import ELN data into an AiiDA node.
