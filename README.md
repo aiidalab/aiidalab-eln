@@ -9,7 +9,7 @@ Integrate AiiDAlab with Electronic Laboratory Notebooks (ELN). This repository i
 As a first prototype we implemented an integration with the open-source [cheminfo ELN](cheminfo.github.io/).
 The ELN and integration can be tested via the [public deployment of the ELN](c6h6.org). Documentation on how to use the frontend can be found [here](docs.c6h6.org).
 
-## Namings
+## API
 
 - `eln_instance` refers to the URL of the ELN API.
 - `eln_type` referst to the type of ELN, e.g. "cheminfo", "openbis".
