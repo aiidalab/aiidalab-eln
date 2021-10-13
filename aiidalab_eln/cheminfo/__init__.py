@@ -8,7 +8,7 @@ import traitlets
 from aiida.orm import Node
 from aiida.plugins import DataFactory
 from cheminfopy import User, errors
-from IPython.display import clear_output, display
+from IPython.display import Javascript, clear_output, display
 
 from ..base_connector import ElnConnector
 from .exporter import export_cif, export_isotherm
@@ -20,7 +20,6 @@ class CheminfoElnConnector(ElnConnector):
 
     node = traitlets.Instance(Node, allow_none=True)
     token = traitlets.Unicode()
-    token_url_base = "https://www.cheminfo.org/flavor/tools/Token/index.html?rocUrl="
     sample_uuid = traitlets.Unicode()
     file_name = traitlets.Unicode()
     data_type = traitlets.Unicode()
@@ -44,10 +43,9 @@ class CheminfoElnConnector(ElnConnector):
         )
         traitlets.link((self, "token"), (token_widget, "value"))
 
-        self.button_clicked = (
-            True  # Boolean to switch on and off the token request window.
+        request_token_button = ipw.Button(
+            description="Request token", tooltip="Will open new tab/window."
         )
-        request_token_button = ipw.Button(description="Request token")
         request_token_button.on_click(self.request_token)
 
         self.sample_uuid_widget = ipw.Text(
@@ -72,6 +70,11 @@ class CheminfoElnConnector(ElnConnector):
                 token_widget,
                 request_token_button,
                 self.output,
+                ipw.HTML(
+                    value="You can find more information about the integration with the cheminfo ELN in \
+                        <a href='https://docs.c6h6.org/docs/eln/uuid/07223c3391c6b0cde342518d240d3426#integration-with-molecular-and-atomistic-simulations'  target='_blank'>\
+                        the documentation</a>."
+                ),
             ],
             **kwargs,
         )
@@ -93,20 +96,8 @@ class CheminfoElnConnector(ElnConnector):
 
     def request_token(self, _=None):
         """Request token from the selected Cheminfo ELN."""
-        with self.output:
-            clear_output()
-            if self.button_clicked:
-                token_url = self.token_url_base + urllib.parse.quote(self.eln_instance)
-                display(
-                    ipw.HTML(
-                        f"""
-                Once it appears, copy the text from the frame below, and insert it to the "Token" field above.
-                <br/>
-                <iframe src="{token_url}" width="400" height="300"></iframe>
-                """
-                    )
-                )
-        self.button_clicked = not self.button_clicked
+        token_url = self.eln_instance + "/misc/token/"
+        display(Javascript('window.open("{url}");'.format(url=token_url)))
 
     @property
     def is_connected(self):
