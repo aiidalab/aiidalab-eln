@@ -8,7 +8,10 @@ def get_eln_connector(eln_type: str = "cheminfo"):
     if eln_type == "cheminfo":
         return CheminfoElnConnector
     raise NotImplementedError(
-        f"The ELN connector of type '{eln_type}' is not implemented."
+        f"""Unexpected error. The ELN connector of type '{eln_type}'
+        is not implemented. Please report this to the
+        <a href="https://github.com/aiidalab/aiidalab-eln/issues/new" target="_blank">
+        issue tracker </a>."""
     )
 
 
