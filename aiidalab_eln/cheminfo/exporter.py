@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Export AiiDA objects to the cheminfo ELN."""
 
 from aiida import orm

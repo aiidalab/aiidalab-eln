@@ -1,14 +1,12 @@
 """Module to define the Cheminfo ELN connector for AiiDAlab."""
 
 import pathlib
-import urllib
 
 import ipywidgets as ipw
 import traitlets
 from aiida.orm import Node
-from aiida.plugins import DataFactory
 from cheminfopy import User, errors
-from IPython.display import Javascript, clear_output, display
+from IPython.display import Javascript, display
 
 from ..base_connector import ElnConnector
 from .exporter import export_cif, export_isotherm
@@ -97,7 +95,7 @@ class CheminfoElnConnector(ElnConnector):
     def request_token(self, _=None):
         """Request token from the selected Cheminfo ELN."""
         token_url = self.eln_instance + "/misc/token/"
-        display(Javascript('window.open("{url}");'.format(url=token_url)))
+        display(Javascript(f'window.open("{token_url}");'))
 
     @property
     def is_connected(self):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Provide an ELN connector."""
 from .cheminfo import CheminfoElnConnector
 

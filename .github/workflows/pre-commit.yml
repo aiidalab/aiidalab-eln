@@ -1,27 +1,27 @@
+---
 name: Continuous Integration
 
-on:
-  [push, pull_request]
+on: [push, pull_request]
 
 jobs:
-  pre-commit:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      matrix:
-        python-version: [3.8]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install python dependencies
-      run: |
-        pip install --upgrade pip
-        pip install -e .[pre-commit]
-        reentry scan
-    - name: Run pre-commit
-      run: |
-        pre-commit install
-        pre-commit run --all-files || ( git status --short ; git diff ; exit 1 )
+    pre-commit:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        strategy:
+            matrix:
+                python-version: [3.8]
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v2
+              with:
+                  python-version: ${{ matrix.python-version }}
+            - name: Install python dependencies
+              run: |
+                  pip install --upgrade pip
+                  pip install -e .[pre-commit]
+                  reentry scan
+            - name: Run pre-commit
+              run: |
+                  pre-commit install
+                  pre-commit run --all-files || ( git status --short ; git diff ; exit 1 )
