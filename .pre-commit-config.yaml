@@ -1,39 +1,43 @@
-# # Install pre-commit hooks via
-# pre-commit install
-
+---
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
-    hooks:
-      - id: check-yaml
-      - id: check-json
-      - id: trailing-whitespace
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.1.0
+      hooks:
+          - id: check-json
+          - id: check-yaml
+          - id: end-of-file-fixer
+          - id: trailing-whitespace
 
-  - repo: https://github.com/psf/black
-    rev: 20.8b1
-    hooks:
-      - id: black
-        language_version: python3
-        name: black
-        exclude: versioneer.py|pyepal/_version.py|^docs/
-        entry: black
-        types: [python]
+    - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+      rev: 0.1.0
+      hooks:
+          - id: yamlfmt
 
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: "v5.6.4" # Use the revision sha / tag you want to point at
-    hooks:
-      - id: isort
-        name: isort
-        language: system
-        types: [python]
-        entry: isort
+    - repo: https://github.com/psf/black
+      rev: 22.1.0
+      hooks:
+          - id: black
+            language_version: python3 # Should be a command that runs python3.6+
 
-  - repo: local
-    hooks:
-      # prospector: collection of linters
-      - id: pylint
-        name: pylint
-        entry: pylint
-        types: [python]
-        language: system
+    - repo: https://github.com/PyCQA/flake8
+      rev: 4.0.1
+      hooks:
+          - id: flake8
+            args: [--count, --show-source, --statistics]
 
+    - repo: https://github.com/pycqa/isort
+      rev: 5.10.1
+      hooks:
+          - id: isort
+            args: [--profile, black, --filter-files]
+
+    - repo: https://github.com/sirosen/check-jsonschema
+      rev: 0.13.0
+      hooks:
+          - id: check-github-workflows
+
+    - repo: https://github.com/asottile/pyupgrade
+      rev: v2.31.0
+      hooks:
+          - id: pyupgrade
+            args: [--py37-plus]
