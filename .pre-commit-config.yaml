@@ -25,6 +25,11 @@ repos:
           - id: flake8
             args: [--count, --show-source, --statistics]
 
+    - repo: https://github.com/asottile/setup-cfg-fmt
+      rev: v1.20.0
+      hooks:
+          - id: setup-cfg-fmt
+
     - repo: https://github.com/pycqa/isort
       rev: 5.10.1
       hooks:
