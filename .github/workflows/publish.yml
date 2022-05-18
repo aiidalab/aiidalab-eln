@@ -3,63 +3,17 @@ name: Publish on Test PyPI and PyPI
 
 on:
     push:
-        branches:
-      # Commits pushed to release/ branches are published on Test PyPI if they
-      # have a new version number.
-            - release/**
         tags:
-      # Tags that start with the "v" prefix are published on PyPI.
-            - v*
+      # After vMajor.Minor.Patch _anything_ is allowed (without "/") !
+            - v[0-9]+.[0-9]+.[0-9]+*
 
 jobs:
-
-    build-and-publish-test:
-
-        name: Build and publish on TestPyPI
-        if: startsWith(github.ref, 'refs/heads/release/')
-
+    publish:
         runs-on: ubuntu-latest
-        environment:
-            name: Test PyPI
-            url: https://test.pypi.org/project/aiidalab-eln/
-
-        steps:
-            - uses: actions/checkout@v2
-
-            - name: Set up Python 3.8
-              uses: actions/setup-python@v2
-              with:
-                  python-version: 3.8
-
-            - name: Install pypa/build
-              run: python -m pip install build
-
-            - name: Build a binary wheel and a source tarball
-              run: >-
-                  python -m
-                  build
-                  --sdist
-                  --wheel
-                  --outdir dist/
-                  .
-            - name: Publish distribution on Test PyPI
-              uses: pypa/gh-action-pypi-publish@release/v1
-              with:
-                  user: __token__
-                  password: ${{ secrets.PYPI_API_TOKEN }}
-                  repository_url: https://test.pypi.org/legacy/
-
-    build-and-publish:
-
-        name: Build and publish on PyPI
         if: startsWith(github.ref, 'refs/tags')
 
-        runs-on: ubuntu-latest
-        environment:
-            name: PyPI
-            url: https://pypi.org/project/aiidalab-eln/
-
         steps:
+            - name: Checkout repository
             - uses: actions/checkout@v2
 
             - name: Set up Python 3.8
@@ -70,14 +24,16 @@ jobs:
             - name: Install pypa/build
               run: python -m pip install build
 
-            - name: Build a binary wheel and a source tarball
-              run: >-
-                  python -m
-                  build
-                  --sdist
-                  --wheel
-                  --outdir dist/
-                  .
+            - name: Build source distribution
+              run: python ./setup.py sdist
+
+            - name: Create GitHub release
+              uses: softprops/action-gh-release@v0.1.14
+              with:
+                  files: |
+                      dist/*
+                  generate_release_notes: true
+
             - name: Publish distribution on PyPI
               uses: pypa/gh-action-pypi-publish@release/v1
               with:
