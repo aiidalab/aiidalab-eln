@@ -1,4 +1,6 @@
 """Provide an ELN connector."""
+from aiida_nanotech_empa.version import __version__
+
 from .cheminfo import CheminfoElnConnector
 
 
@@ -14,4 +16,6 @@ def get_eln_connector(eln_type: str = "cheminfo"):
     )
 
 
-__version__ = "0.1.1"
+__all__ = [
+    "__version__",
+]
