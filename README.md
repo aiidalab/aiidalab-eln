@@ -32,5 +32,7 @@ funded by the [Swiss National Science Foundation](<http://www.snf.ch/en>), as we
 European Centre of Excellence](<http://www.max-centre.eu/>) funded by the Horizon 2020 EINFRA-5 program,
 Grant No. 676598 and an European Research Council (ERC) Advanced Grant (Grant Agreement No. 666983, MaGic).
 
-![MARVEL](https://raw.githubusercontent.com/aiidalab/aiidalab/develop/miscellaneous/logos/MARVEL.png)
-![MaX](https://raw.githubusercontent.com/aiidalab/aiidalab/develop/miscellaneous/logos/MaX.png)
+<div style="text-align:center">
+ <img src="miscellaneous/logos/MARVEL.png" alt="MARVEL" height="75px">
+ <img src="miscellaneous/logos/MaX.png" alt="MaX" height="75px">
+</div>
