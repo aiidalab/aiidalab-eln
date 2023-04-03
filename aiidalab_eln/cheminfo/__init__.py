@@ -23,7 +23,6 @@ class CheminfoElnConnector(ElnConnector):
     data_type = traitlets.Unicode()
 
     def __init__(self, **kwargs):
-
         self.session = None
 
         eln_instance_widget = ipw.Text(
