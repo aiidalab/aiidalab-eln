@@ -1,4 +1,5 @@
 """Module that defines the base class for ELN connetors."""
+
 import ipywidgets as ipw
 import traitlets
 
