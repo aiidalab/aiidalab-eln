@@ -2,10 +2,50 @@ from ..base_connector import ElnConnector
 import traitlets as tl
 from aiida import orm
 import ipywidgets as ipw
+import pybis as pb
 
+
+
+import numpy as np
+from rdkit import Chem
+from rdkit.Chem import AllChem
+from ase import Atoms
+from sklearn.decomposition import PCA
+from aiida import plugins
+
+
+def make_ase(species, positions):
+    """Create ase Atoms object."""
+    # Get the principal axes and realign the molecule along z-axis.
+    positions = PCA(n_components=3).fit_transform(positions)
+    atoms = Atoms(species, positions=positions, pbc=True)
+    atoms.cell = np.ptp(atoms.positions, axis=0) + 10
+    atoms.center()
+
+    return atoms
+
+def _rdkit_opt(smiles, steps=1000):
+    """Optimize a molecule using force field and rdkit (needed for complex SMILES)."""
+
+    smiles = smiles.replace("[", "").replace("]", "")
+    mol = Chem.MolFromSmiles(smiles)
+    mol = Chem.AddHs(mol)
+
+    AllChem.EmbedMolecule(mol, maxAttempts=20, randomSeed=42)
+    AllChem.UFFOptimizeMolecule(mol, maxIters=steps)
+    positions = mol.GetConformer().GetPositions()
+    natoms = mol.GetNumAtoms()
+    species = [mol.GetAtomWithIdx(j).GetSymbol() for j in range(natoms)]
+    return make_ase(species, positions)
+
+def import_smiles(sample):
+    object_type = plugins.DataFactory("structure")
+    node = object_type(ase=_rdkit_opt(sample.props.smiles))
+    return node
+    
 
 class OpenbisElnConnector(ElnConnector):
-    """Cheminfo ELN connector to AiiDAlab."""
+    """OpenBIS ELN connector to AiiDAlab."""
 
     node = tl.Instance(orm.Node, allow_none=True)
     token = tl.Unicode()
@@ -66,7 +106,45 @@ class OpenbisElnConnector(ElnConnector):
             ],
             **kwargs,
         )
-    
+    def connect(self):
+        """Function to login to openBIS."""
+        self.session = pb.Openbis(self.eln_instance, verify_certificates=False)
+        self.session.set_token(self.token)
+        return ""
+
+    def get_config(self):
+        return {
+            "eln_instance": self.eln_instance,
+            "eln_type": self.eln_type,
+            "token": self.token,
+        }
+
     def request_token(self, _=None):
         """Request a token."""
         raise NotImplementedError("The method 'request_token' is not implemented yet.")
+
+    @property
+    def is_connected(self):
+        return self.session.is_token_valid()
+
+    @tl.default("eln_type")
+    def set_eln_type(self):  # pylint: disable=no-self-use
+        return "openbis"
+    
+    
+    def import_data(self):
+        """Import data object from OpenBIS ELN to AiiDAlab."""
+        
+        sample = self.session.get_sample(self.sample_uuid)
+        
+        #print("Sample", sample)
+        if self.data_type == "smiles":
+            self.node = import_smiles(sample)
+        eln_info = {
+            "eln_instance": self.eln_instance,
+            "eln_type": self.eln_type,
+            "sample_uuid": self.sample_uuid,
+            "data_type": self.data_type,
+        }
+        self.node.set_extra("eln", eln_info)
+        self.node.store()
