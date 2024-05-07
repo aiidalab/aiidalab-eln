@@ -157,7 +157,7 @@ class OpenbisElnConnector(ElnConnector):
                 if "GeoOpt" in current_node.label:
                     all_geoopts.append(current_node)
                     current_node = current_node.inputs.structure
-                elif "ORBITALS" in current_node.label:
+                elif "ORBITALS" in current_node.label or "STM" in current_node.label:
                     current_node = current_node.inputs.structure
                 else:
                     current_node = current_node.caller
@@ -340,11 +340,11 @@ class OpenbisElnConnector(ElnConnector):
                 
                 #TODO: Remove this is the future. Orbitals do not have stm_params
                 try:
-                    stm_params = dict(stm.inputs.stm_params)
+                    stm_params = dict(stm.inputs.spm_params)
                     stm_model.props = {
-                        "emin-J": stm_params['--energy_range'][0] * 1.60217663e-19,
-                        "emax-J": stm_params['--energy_range'][1] * 1.60217663e-19,
-                        "de-J": stm_params['--energy_range'][2] * 1.60217663e-19
+                        "emin-j": float(stm_params['--energy_range'][0]) * 1.60217663e-19,
+                        "emax-j": float(stm_params['--energy_range'][1]) * 1.60217663e-19,
+                        "de-j": float(stm_params['--energy_range'][2]) * 1.60217663e-19
                     }
                 except:
                     pass
@@ -432,8 +432,7 @@ class OpenbisElnConnector(ElnConnector):
         if isinstance(self.node, orm.WorkChainNode):
         
             # Get structure used in the Workchain
-            structure_stm = self.node.inputs.structure
-            all_aiida_stms = [structure_stm]
+            all_aiida_stms = [self.node]
             
             # Verify which structures (atomistic models) are already in openBIS
             all_aiida_stms, all_stms_inside_openbis = self.check_aiida_objects_in_openbis(all_aiida_stms, simulations_openbis)
