@@ -1,5 +1,5 @@
+import json
 import os
-from datetime import datetime
 
 import ipywidgets as ipw
 import numpy as np
@@ -40,9 +40,9 @@ def _rdkit_opt(smiles, steps=1000):
     return make_ase(species, positions)
 
 
-def import_smiles(sample):
+def import_smiles(smiles):
     object_type = plugins.DataFactory("structure")
-    node = object_type(ase=_rdkit_opt(sample.props.smiles))
+    node = object_type(ase=_rdkit_opt(smiles))
     return node
 
 
@@ -52,6 +52,8 @@ class OpenbisElnConnector(ElnConnector):
     node = tl.Instance(orm.Node, allow_none=True)
     token = tl.Unicode()
     sample_uuid = tl.Unicode()
+    molecule_info = tl.Unicode()
+    molecule_uuid = tl.Unicode()
     data_type = tl.Unicode()
 
     def __init__(self, **kwargs):
@@ -170,17 +172,18 @@ class OpenbisElnConnector(ElnConnector):
     def import_data(self):
         """Import data object from OpenBIS ELN to AiiDAlab."""
 
-        sample = self.extract_sample_id()
+        # sample = self.extract_sample_id()
+        molecule_info_dict = json.loads(self.molecule_info)
 
         # print("Sample", sample)
         if self.data_type == "smiles":
-            self.node = import_smiles(sample)
+            self.node = import_smiles(molecule_info_dict["smiles"])
         eln_info = {
             "eln_instance": self.eln_instance,
             "eln_type": self.eln_type,
             "sample_uuid": self.sample_uuid,
             "data_type": self.data_type,
-            "molecule_uuid": sample.permId,
+            "molecule_uuid": self.molecule_uuid,
         }
         self.node.set_extra("eln", eln_info)
         self.node.store()
@@ -203,7 +206,7 @@ class OpenbisElnConnector(ElnConnector):
             self.session.get_collections(
                 project=project_code, code=collection_code
             ).df.empty
-            == False
+            is False
         )
 
     def create_collection_openbis(
@@ -214,7 +217,7 @@ class OpenbisElnConnector(ElnConnector):
         collection_type,
         collection_exists,
     ):
-        if collection_exists == False:
+        if collection_exists is False:
             collection = self.create_new_collection_openbis(
                 project_code, collection_code, collection_type, collection_name
             )
@@ -233,14 +236,14 @@ class OpenbisElnConnector(ElnConnector):
         for _, aiida_object in enumerate(aiida_objects):
             aiida_object_inside_openbis_exists = False
             for openbis_object in openbis_objects:
-                if openbis_object.props.get("wfms-uuid") == aiida_object.uuid:
+                if openbis_object.props.get("wfms_uuid") == aiida_object.uuid:
                     aiida_objects_inside_openbis.append([openbis_object, True])
                     aiida_object_inside_openbis_exists = True
                     print(
-                        f"Object {openbis_object.props.get('wfms-uuid')} already exists."
+                        f"Object {openbis_object.props.get('wfms_uuid')} already exists."
                     )
 
-            if aiida_object_inside_openbis_exists == False:
+            if aiida_object_inside_openbis_exists is False:
                 aiida_objects_inside_openbis.append([None, False])
 
         # Reverse the lists because in openBIS, one should start by building the parents.
@@ -252,7 +255,7 @@ class OpenbisElnConnector(ElnConnector):
     def create_new_object_openbis(
         self, collection_identifier, object_type, parents=None
     ):
-        if parents == None:
+        if parents is None:
             return self.session.new_sample(
                 collection=collection_identifier, type=object_type
             )
@@ -261,7 +264,7 @@ class OpenbisElnConnector(ElnConnector):
                 collection=collection_identifier, type=object_type, parents=parents
             )
 
-    def set_object_props(
+    def set_atomistic_model_props(
         self,
         aiida_object_index,
         aiida_object,
@@ -274,24 +277,29 @@ class OpenbisElnConnector(ElnConnector):
             structure_ase = aiida_object.get_ase()
             # structure_ase.positions # Atoms positions
             # structure_ase.symbols # Atoms Symbols
-            # structure_ase.pbc # PBC (X, Y, Z)
             # structure.cell # Cell vectors
+
+            pbc = json.dumps(
+                {
+                    "x": int(structure_ase.pbc[0]),
+                    "y": int(structure_ase.pbc[1]),
+                    "z": int(structure_ase.pbc[2]),
+                }
+            )
 
             object_props = {
                 "$name": f"Atomistic Model {aiida_object_index}",
-                "wfms-uuid": aiida_object.uuid,
-                "pbc-x": int(structure_ase.pbc[0]),
-                "pbc-y": int(structure_ase.pbc[1]),
-                "pbc-z": int(structure_ase.pbc[2]),
+                "wfms_uuid": aiida_object.uuid,
+                "periodic_boundary_conditions": pbc,
             }
 
             if (
                 number_aiida_objects > 1
                 and aiida_object_index == number_aiida_objects - 1
             ):  # If it is the last of more than one structures, it is optimised.
-                object_props["optimised"] = 1
+                object_props["optimised"] = True
             else:
-                object_props["optimised"] = 0
+                object_props["optimised"] = False
 
         return object_props
 
@@ -311,13 +319,13 @@ class OpenbisElnConnector(ElnConnector):
             else:
                 structure_inside_openbis = structures_inside_openbis[structure_index]
 
-                if structure_inside_openbis[1] == False:
+                if structure_inside_openbis[1] is False:
                     # Create Atomistic Model in openBIS
                     number_aiida_objects = len(structures_nodes)
                     atomistic_model = self.create_new_object_openbis(
                         collection_identifier, "ATOMISTIC_MODEL"
                     )
-                    atomistic_model.props = self.set_object_props(
+                    atomistic_model.props = self.set_atomistic_model_props(
                         structure_index,
                         structure,
                         number_aiida_objects,
@@ -330,7 +338,7 @@ class OpenbisElnConnector(ElnConnector):
 
         # If the simulation started from openBIS, we make the connection between the molecule and the first atomistic model
         # If the atomistic model (second structure, right after the molecule) is already there, there is no need to make the connection, because in principle it already contains it
-        if selected_molecule is not None and structures_inside_openbis[1][1] == False:
+        if selected_molecule is not None and structures_inside_openbis[1][1] is False:
             atomistic_models[0].add_parents(selected_molecule)
             atomistic_models[0].save()
 
@@ -348,27 +356,25 @@ class OpenbisElnConnector(ElnConnector):
         for geoopt_index, geoopt in enumerate(geoopts_nodes):
             geoopt_inside_openbis = geoopts_inside_openbis[geoopt_index]
 
-            if geoopt_inside_openbis[1] == False:
+            if geoopt_inside_openbis[1] is False:
                 parent_atomistic_model = atomistic_models[geoopt_index]
-                geoopt_simulation = self.create_new_object_openbis(
-                    collection_identifier, "SIMULATION", [parent_atomistic_model]
-                )
-                geoopt_simulation.props = {
-                    "$name": f"GeoOpt Simulation {geoopt_index}",
-                    "wfms-uuid": geoopt.uuid,
-                }
-                geoopt_simulation.save()
 
                 geoopt_model = self.create_new_object_openbis(
-                    collection_identifier, "GEO_OPTIMISATION", [geoopt_simulation]
+                    collection_identifier,
+                    "GEOMETRY_OPTIMISATION",
+                    [parent_atomistic_model],
                 )
+                geoopt_model.props = {
+                    "$name": f"GeoOpt Simulation {geoopt_index}",
+                    "wfms_uuid": geoopt.uuid,
+                }
                 geoopt_model.save()
 
                 # Its plus one because there are N+1 geometries for N GeoOpts
                 atomistic_models[geoopt_index + 1].add_parents(geoopt_model)
                 atomistic_models[geoopt_index + 1].save()
 
-                geoopts_simulations.append(geoopt_simulation)
+                geoopts_simulations.append(geoopt_model)
             else:
                 geoopts_simulations.append(geoopt_inside_openbis[0])
 
@@ -382,41 +388,47 @@ class OpenbisElnConnector(ElnConnector):
         for stm_index, stm in enumerate(stms_nodes):
             stm_inside_openbis = stms_inside_openbis[stm_index]
 
-            if stms_inside_openbis[0][1] == False:
+            if stms_inside_openbis[0][1] is False:
 
                 optimised_atomistic_model = atomistic_models[-1]
 
-                # Simulation object
-                stm_simulation = self.create_new_object_openbis(
-                    collection_identifier, "SIMULATION", [optimised_atomistic_model]
-                )
-                stm_simulation.props = {
-                    "$name": f"STM Simulation {stm_index}",
-                    "description": "STM Simulation",
-                    "wfms-uuid": stm.uuid,
-                }
-                stm_simulation.save()
-
                 # Simulated STM
                 stm_model = self.create_new_object_openbis(
-                    collection_identifier, "STM", [stm_simulation]
+                    collection_identifier, "STM", [optimised_atomistic_model]
                 )
+
+                stm_model.props = {
+                    "$name": f"STM Simulation {stm_index}",
+                    "wfms_uuid": stm.uuid,
+                }
                 # dft_params = dict(self.node.inputs.dft_params)
 
                 # TODO: Remove this is the future. Orbitals do not have stm_params
                 try:
                     stm_params = dict(stm.inputs.spm_params)
                     stm_model.props = {
-                        "emin-j": float(stm_params["--energy_range"][0])
-                        * 1.60217663e-19,
-                        "emax-j": float(stm_params["--energy_range"][1])
-                        * 1.60217663e-19,
-                        "de-j": float(stm_params["--energy_range"][2]) * 1.60217663e-19,
+                        "e_min": json.dumps(
+                            {
+                                "value": float(stm_params["--energy_range"][0]),
+                                "unit": "http://qudt.org/vocab/unit/EV",
+                            }
+                        ),
+                        "e_max": json.dumps(
+                            {
+                                "value": float(stm_params["--energy_range"][1]),
+                                "unit": "http://qudt.org/vocab/unit/EV",
+                            }
+                        ),
+                        "de": json.dumps(
+                            {
+                                "value": float(stm_params["--energy_range"][2]),
+                                "unit": "http://qudt.org/vocab/unit/EV",
+                            }
+                        ),
                     }
-                except:
+                except Exception:
                     pass
 
-                stm_model.props["$name"] = f"Simulated STM {stm_index}"
                 stm_model.save()
 
                 # stm_simulation_images_zip_filename = series_plotter_inst.create_zip_link_for_openbis()
@@ -476,8 +488,8 @@ class OpenbisElnConnector(ElnConnector):
             atomistic_models_collection_exists,
         )
 
-        # Get all simulations and atomistic models from openbis
-        simulations_openbis = self.get_objects_list_openbis("SIMULATION")
+        # Get all geoopts and atomistic models from openbis
+        geoopts_openbis = self.get_objects_list_openbis("GEOMETRY_OPTIMISATION")
         atomistic_models_openbis = self.get_objects_list_openbis("ATOMISTIC_MODEL")
 
         # Get Geometry Optimisation Workchain from AiiDA
@@ -487,7 +499,7 @@ class OpenbisElnConnector(ElnConnector):
 
         # Verify which GeoOpts are already in openBIS
         all_aiida_geoopts, all_geoopts_inside_openbis = (
-            self.check_aiida_objects_in_openbis(all_aiida_geoopts, simulations_openbis)
+            self.check_aiida_objects_in_openbis(all_aiida_geoopts, geoopts_openbis)
         )
 
         # Verify which structures (atomistic models) are already in openBIS
@@ -530,34 +542,37 @@ class OpenbisElnConnector(ElnConnector):
             # Get structure used in the Workchain
             all_aiida_stms = [self.node]
 
+            # Get all STMs inside openBIS
+            stms_openbis = self.get_objects_list_openbis("STM")
+
             # Verify which structures (atomistic models) are already in openBIS
             all_aiida_stms, all_stms_inside_openbis = (
-                self.check_aiida_objects_in_openbis(all_aiida_stms, simulations_openbis)
+                self.check_aiida_objects_in_openbis(all_aiida_stms, stms_openbis)
             )
 
             # Build STM Simulations in openBIS
-            all_stms_simulations = self.create_stm_simulations(
+            _ = self.create_stm_simulations(
                 all_aiida_stms,
                 all_stms_inside_openbis,
                 simulation_experiment_identifier,
                 all_atomistic_models,
             )
 
-    def extract_sample_id(self):
+    # def extract_sample_id(self):
 
-        experiment = self.session.get_experiment(self.sample_uuid)
-        samples = experiment.get_samples()
+    #     experiment = self.session.get_experiment(self.sample_uuid)
+    #     samples = experiment.get_samples()
 
-        for sample in samples:
-            if sample.type.code == "DEPOSITION":
-                deposition_sample = self.session.get_sample(sample.permId)
-                break
+    #     for sample in samples:
+    #         if sample.type.code == "DEPOSITION":
+    #             deposition_sample = self.session.get_sample(sample.permId)
+    #             break
 
-        for parent in deposition_sample.parents:
-            parent_sample = self.session.get_sample(parent)
+    #     for parent in deposition_sample.parents:
+    #         parent_sample = self.session.get_sample(parent)
 
-            if parent_sample.type.code == "MOLECULE":
-                molecule_sample = self.session.get_sample(parent_sample.permId)
-                break
+    #         if parent_sample.type.code == "MOLECULE":
+    #             molecule_sample = self.session.get_sample(parent_sample.permId)
+    #             break
 
-        return molecule_sample
+    #     return molecule_sample
