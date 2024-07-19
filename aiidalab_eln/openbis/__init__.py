@@ -472,7 +472,7 @@ class OpenbisElnConnector(ElnConnector):
         inventory_project_code = "/MATERIALS/ATOMISTIC_MODELS"
         atomistic_models_collection_name = "Atomistic Models"
         atomistic_models_collection_type = "COLLECTION"
-        atomistic_models_collection_code = "ATOMISTIC_MODELS_COLLECTION"
+        atomistic_models_collection_code = "ATOMISTIC_MODEL_COLLECTION"
         atomistic_models_collection_identifier = (
             f"{inventory_project_code}/{atomistic_models_collection_code}"
         )
