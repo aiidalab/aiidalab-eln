@@ -394,7 +394,7 @@ class OpenbisElnConnector(ElnConnector):
 
                 # Simulated STM
                 stm_model = self.create_new_object_openbis(
-                    collection_identifier, "STM", [optimised_atomistic_model]
+                    collection_identifier, "2D_MEASUREMENT", [optimised_atomistic_model]
                 )
 
                 stm_model.props = {
