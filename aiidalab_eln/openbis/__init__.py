@@ -1,15 +1,18 @@
 import json
 import os
+import shutil
 
 import ipywidgets as ipw
 import numpy as np
 import pybis as pb
+import rdkit
 import traitlets as tl
 from aiida import orm, plugins
 from ase import Atoms
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from sklearn.decomposition import PCA
+from surfaces_tools.widgets import cdxml
 
 from ..base_connector import ElnConnector
 
@@ -40,10 +43,29 @@ def _rdkit_opt(smiles, steps=1000):
     return make_ase(species, positions)
 
 
+def read_file(filename):
+    return open(filename, "rb").read()
+
+
 def import_smiles(smiles):
     object_type = plugins.DataFactory("structure")
     node = object_type(ase=_rdkit_opt(smiles))
     return node
+
+
+def get_molecule_cdxml(session, molecule_permid):
+    molecule_obis = session.get_object(molecule_permid)
+    molecule_obis_datasets = molecule_obis.get_datasets()
+    for dataset in molecule_obis_datasets:
+        dataset_files = dataset.file_list
+        for file in dataset_files:
+            _, file_extension = os.path.splitext(file)
+            if file_extension == ".cdxml":
+                dataset.download(destination="cdxml_files")
+                structure_filepath = f"cdxml_files/{dataset.permId}/{file}"
+                structure_cdxml = read_file(structure_filepath)
+                shutil.rmtree(f"cdxml_files/{dataset.permId}/")
+                return structure_cdxml
 
 
 class OpenbisElnConnector(ElnConnector):
@@ -57,6 +79,7 @@ class OpenbisElnConnector(ElnConnector):
     data_type = tl.Unicode()
 
     def __init__(self, **kwargs):
+
         self.session = None
 
         eln_instance_widget = ipw.Text(
@@ -86,7 +109,7 @@ class OpenbisElnConnector(ElnConnector):
         )
         tl.link((self, "sample_uuid"), (self.sample_uuid_widget, "value"))
 
-        self.output = ipw.Output()
+        self.output = ipw.VBox()
 
         super().__init__(
             children=[
@@ -175,18 +198,45 @@ class OpenbisElnConnector(ElnConnector):
         # sample = self.extract_sample_id()
         molecule_info_dict = json.loads(self.molecule_info)
 
-        # print("Sample", sample)
         if self.data_type == "smiles":
             self.node = import_smiles(molecule_info_dict["smiles"])
-        eln_info = {
-            "eln_instance": self.eln_instance,
-            "eln_type": self.eln_type,
-            "sample_uuid": self.sample_uuid,
-            "data_type": self.data_type,
-            "molecule_uuid": self.molecule_uuid,
-        }
-        self.node.set_extra("eln", eln_info)
-        self.node.store()
+
+        elif self.data_type == "cdxml":
+            self.cdxml_import_widget = cdxml.CdxmlUpload2GnrWidget()
+            tl.dlink(
+                (self.cdxml_import_widget, "structure"),
+                (self, "node"),
+                transform=lambda struct: orm.StructureData(ase=struct),
+            )
+
+            self.output.children = [self.cdxml_import_widget]
+
+            cdxml_content = get_molecule_cdxml(self.session, self.sample_uuid)
+            cdxml_content = cdxml_content.decode("ascii")  # To test
+            (
+                self.cdxml_import_widget.crossing_points,
+                self.cdxml_import_widget.cdxml_atoms,
+                self.cdxml_import_widget.nunits.disabled,
+            ) = self.cdxml_import_widget.extract_crossing_and_atom_positions(
+                cdxml_content
+            )
+
+            # Convert CDXML content to RDKit molecules and ASE Atoms objects
+            options = [
+                self.cdxml_import_widget.rdkit2ase(mol)
+                for mol in rdkit.Chem.MolsFromCDXML(cdxml_content)
+            ]
+            self.cdxml_import_widget.atoms = options[0]
+            self.cdxml_import_widget._on_button_click()
+
+        # eln_info = {
+        #     "eln_instance": self.eln_instance,
+        #     "eln_type": self.eln_type,
+        #     "sample_uuid": self.sample_uuid,
+        #     "data_type": self.data_type,
+        # }
+        # self.node.set_extra("eln", eln_info)
+        # self.node.store()
 
     def create_new_collection_openbis(
         self, project_code, collection_code, collection_type, collection_name
