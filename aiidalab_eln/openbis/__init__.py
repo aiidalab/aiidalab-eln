@@ -200,13 +200,16 @@ class OpenbisElnConnector(ElnConnector):
 
         if self.data_type == "smiles":
             self.node = import_smiles(molecule_info_dict["smiles"])
+            self.node.store()
 
         elif self.data_type == "cdxml":
             self.cdxml_import_widget = cdxml.CdxmlUpload2GnrWidget()
             tl.dlink(
                 (self.cdxml_import_widget, "structure"),
                 (self, "node"),
-                transform=lambda struct: orm.StructureData(ase=struct),
+                transform=lambda struct: (
+                    orm.StructureData(ase=struct).store() if struct else None
+                ),
             )
 
             self.output.children = [self.cdxml_import_widget]
@@ -229,14 +232,13 @@ class OpenbisElnConnector(ElnConnector):
             self.cdxml_import_widget.atoms = options[0]
             self.cdxml_import_widget._on_button_click()
 
-        # eln_info = {
-        #     "eln_instance": self.eln_instance,
-        #     "eln_type": self.eln_type,
-        #     "sample_uuid": self.sample_uuid,
-        #     "data_type": self.data_type,
-        # }
-        # self.node.set_extra("eln", eln_info)
-        # self.node.store()
+        eln_info = {
+            "eln_instance": self.eln_instance,
+            "eln_type": self.eln_type,
+            "sample_uuid": self.sample_uuid,
+            "data_type": self.data_type,
+        }
+        self.node.set_extra("eln", eln_info)
 
     def create_new_collection_openbis(
         self, project_code, collection_code, collection_type, collection_name
