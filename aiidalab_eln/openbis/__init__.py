@@ -12,7 +12,7 @@ from ase import Atoms
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from sklearn.decomposition import PCA
-from surfaces_tools.widgets import cdxml
+from aiidalab_widgets_empa import cdxml
 
 from ..base_connector import ElnConnector
 
