@@ -2,34 +2,29 @@ import json
 import os
 import shutil
 
+import aiidalab_widgets_base as awb
+import ase
 import ipywidgets as ipw
 import numpy as np
 import pybis as pb
-import rdkit
 import traitlets as tl
 from aiida import orm, plugins
-from ase import Atoms
+from aiidalab_widgets_empa import cdxml
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from sklearn.decomposition import PCA
-from aiidalab_widgets_empa import cdxml
 
 from ..base_connector import ElnConnector
 
 
-def make_ase(species, positions):
-    """Create ase Atoms object."""
-    # Get the principal axes and realign the molecule along z-axis.
-    positions = PCA(n_components=3).fit_transform(positions)
-    atoms = Atoms(species, positions=positions, pbc=True)
-    atoms.cell = np.ptp(atoms.positions, axis=0) + 10
-    atoms.center()
-
-    return atoms
-
-
-def _rdkit_opt(smiles, steps=1000):
-    """Optimize a molecule using force field and rdkit (needed for complex SMILES)."""
+def import_smiles(smiles, steps=1000):
+    """Import a molecule from a SMILES string.
+    Args:
+        smiles (str): SMILES string of the molecule.
+        steps (int): Number of optimization steps.
+    Returns:
+        StructureData: AiiDA StructureData node of the molecule.
+    """
 
     smiles = smiles.replace("[", "").replace("]", "")
     mol = Chem.MolFromSmiles(smiles)
@@ -40,16 +35,16 @@ def _rdkit_opt(smiles, steps=1000):
     positions = mol.GetConformer().GetPositions()
     natoms = mol.GetNumAtoms()
     species = [mol.GetAtomWithIdx(j).GetSymbol() for j in range(natoms)]
-    return make_ase(species, positions)
 
+    # Make an ASE Atoms object.
+    positions = PCA(n_components=3).fit_transform(positions)
+    atoms = ase.Atoms(species, positions=positions, pbc=True)
+    atoms.cell = np.ptp(atoms.positions, axis=0) + 10
+    atoms.center()
 
-def read_file(filename):
-    return open(filename, "rb").read()
-
-
-def import_smiles(smiles):
+    # Create AiiDA StructureData node from ASE atoms object and return it
     object_type = plugins.DataFactory("structure")
-    node = object_type(ase=_rdkit_opt(smiles))
+    node = object_type(ase=atoms)
     return node
 
 
@@ -63,7 +58,8 @@ def get_molecule_cdxml(session, molecule_permid):
             if file_extension == ".cdxml":
                 dataset.download(destination="cdxml_files")
                 structure_filepath = f"cdxml_files/{dataset.permId}/{file}"
-                structure_cdxml = read_file(structure_filepath)
+                with open(structure_filepath) as file:
+                    structure_cdxml = file.read()
                 shutil.rmtree(f"cdxml_files/{dataset.permId}/")
                 return structure_cdxml
 
@@ -109,14 +105,14 @@ class OpenbisElnConnector(ElnConnector):
         )
         tl.link((self, "sample_uuid"), (self.sample_uuid_widget, "value"))
 
-        self.output = ipw.VBox()
+        self.input_viewer = ipw.VBox()
 
         super().__init__(
             children=[
                 eln_instance_widget,
                 token_widget,
                 request_token_button,
-                self.output,
+                self.input_viewer,
                 ipw.HTML(
                     value="You can find more information about the integration with the cheminfo ELN in \
                         <a href='https://docs.c6h6.org/docs/eln/uuid/07223c3391c6b0cde342518d240d3426#integration-with-molecular-and-atomistic-simulations'  target='_blank'>\
@@ -195,27 +191,33 @@ class OpenbisElnConnector(ElnConnector):
     def import_data(self):
         """Import data object from OpenBIS ELN to AiiDAlab."""
 
-        # sample = self.extract_sample_id()
         molecule_info_dict = json.loads(self.molecule_info)
 
-        if self.data_type == "smiles":
+        node_viewer = awb.AiidaNodeViewWidget()
+        if self.data_type == "MOLECULE":
             self.node = import_smiles(molecule_info_dict["smiles"])
-            self.node.store()
+            self.input_viewer.children = [node_viewer]
+            node_viewer.node = self.node
 
-        elif self.data_type == "cdxml":
-            self.cdxml_import_widget = cdxml.CdxmlUpload2GnrWidget()
+        elif self.data_type == "REACTION_PRODUCT_CONCEPT":
+            self.cdxml_import_widget = cdxml.CdxmlUploadWidget()
             tl.dlink(
                 (self.cdxml_import_widget, "structure"),
                 (self, "node"),
                 transform=lambda struct: (
-                    orm.StructureData(ase=struct).store() if struct else None
+                    orm.StructureData(ase=struct) if struct else None
                 ),
             )
+            tl.dlink((self, "node"), (node_viewer, "node"))
 
-            self.output.children = [self.cdxml_import_widget]
+            self.input_viewer.children = [node_viewer, self.cdxml_import_widget]
 
             cdxml_content = get_molecule_cdxml(self.session, self.sample_uuid)
             cdxml_content = cdxml_content.decode("ascii")  # To test
+
+            self.cdxml_import_widget.atoms = (
+                self.cdxml_import_widget.cdxml_to_ase_from_string(cdxml_content)
+            )
             (
                 self.cdxml_import_widget.crossing_points,
                 self.cdxml_import_widget.cdxml_atoms,
@@ -224,12 +226,6 @@ class OpenbisElnConnector(ElnConnector):
                 cdxml_content
             )
 
-            # Convert CDXML content to RDKit molecules and ASE Atoms objects
-            options = [
-                self.cdxml_import_widget.rdkit2ase(mol)
-                for mol in rdkit.Chem.MolsFromCDXML(cdxml_content)
-            ]
-            self.cdxml_import_widget.atoms = options[0]
             self.cdxml_import_widget._on_button_click()
 
         eln_info = {
@@ -561,16 +557,6 @@ class OpenbisElnConnector(ElnConnector):
             )
         )
 
-        # Get the project identifier of the selected experiment
-        # project_identifier = selected_experiment.project.identifier
-
-        # Create a new simulation experiment in openBIS
-        # now = datetime.now()
-        # simulation_number = now.strftime("%d%m%Y%H%M%S")
-        # simulation_experiment_code = f"SIMULATION_EXPERIMENT_{simulation_number}"
-        # simulation_experiment_name = "Simulation of Methane on Au"
-        # simulation_experiment = self.get_collection_openbis(self.sample_uuid)
-
         # TODO: Do we need to create a simulation experiment or do we put the simulations inside the selected experiment?
         simulation_experiment_identifier = selected_experiment.identifier
 
@@ -609,22 +595,3 @@ class OpenbisElnConnector(ElnConnector):
                 simulation_experiment_identifier,
                 all_atomistic_models,
             )
-
-    # def extract_sample_id(self):
-
-    #     experiment = self.session.get_experiment(self.sample_uuid)
-    #     samples = experiment.get_samples()
-
-    #     for sample in samples:
-    #         if sample.type.code == "DEPOSITION":
-    #             deposition_sample = self.session.get_sample(sample.permId)
-    #             break
-
-    #     for parent in deposition_sample.parents:
-    #         parent_sample = self.session.get_sample(parent)
-
-    #         if parent_sample.type.code == "MOLECULE":
-    #             molecule_sample = self.session.get_sample(parent_sample.permId)
-    #             break
-
-    #     return molecule_sample
