@@ -125,8 +125,10 @@ class OpenbisElnConnector(ElnConnector):
     def connect(self):
         """Function to login to openBIS."""
         self.session = pb.Openbis(self.eln_instance, verify_certificates=False)
-        self.session.set_token(self.token)
-        return ""
+        try:
+            self.session.set_token(self.token)
+        finally:
+            return ""
 
     def set_sample_config(self, **kwargs):
         """Set sample-related variables from a config."""
