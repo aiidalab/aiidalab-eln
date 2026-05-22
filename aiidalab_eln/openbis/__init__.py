@@ -127,8 +127,11 @@ class OpenbisElnConnector(ElnConnector):
         self.session = pb.Openbis(self.eln_instance, verify_certificates=False)
         try:
             self.session.set_token(self.token)
-        finally:
-            return ""
+        except Exception:
+            # Invalid or expired tokens should not make the configuration widget fail.
+            # The widget checks `is_connected` separately and will report "Not connected".
+            pass
+        return ""
 
     def set_sample_config(self, **kwargs):
         """Set sample-related variables from a config."""
