@@ -12,6 +12,7 @@ from aiida import orm, plugins
 from aiidalab_widgets_empa import cdxml
 from rdkit import Chem
 from rdkit.Chem import AllChem
+from sklearn.decomposition import PCA
 
 from ..base_connector import ElnConnector
 
@@ -124,7 +125,12 @@ class OpenbisElnConnector(ElnConnector):
     def connect(self):
         """Function to login to openBIS."""
         self.session = pb.Openbis(self.eln_instance, verify_certificates=False)
-        self.session.set_token(self.token)
+        try:
+            self.session.set_token(self.token)
+        except Exception:
+            # Invalid or expired tokens should not make the configuration widget fail.
+            # The widget checks `is_connected` separately and will report "Not connected".
+            pass
         return ""
 
     def set_sample_config(self, **kwargs):
