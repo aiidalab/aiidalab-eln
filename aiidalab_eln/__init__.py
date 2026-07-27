@@ -1,9 +1,10 @@
 """Provide an ELN connector."""
 
 from .cheminfo import CheminfoElnConnector
+from .elns import ElnConfigureWidget, ElnExportWidget, ElnImportWidget
 from .openbis import OpenbisElnConnector
 from .version import __version__
-from .elns import ElnConfigureWidget, ElnExportWidget, ElnImportWidget
+
 
 def get_eln_connector(eln_type: str = "cheminfo"):
     """Provide ELN connector of a selected type."""

@@ -11,9 +11,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 def selenium_driver(selenium, notebook_service):
     def _selenium_driver(nb_path):
         url, token = notebook_service
-        url_with_token = urljoin(
-            url, f"apps/apps/aiidalab-eln/{nb_path}?token={token}"
-        )
+        url_with_token = urljoin(url, f"apps/apps/aiidalab-eln/{nb_path}?token={token}")
         selenium.get(f"{url_with_token}")
         # By default, let's allow selenium functions to retry for 60s
         # till a given element is loaded, see:
