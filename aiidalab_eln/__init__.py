@@ -1,6 +1,7 @@
 """Provide an ELN connector."""
 
 from .cheminfo import CheminfoElnConnector
+from .elns import ElnConfigureWidget, ElnExportWidget, ElnImportWidget
 from .openbis import OpenbisElnConnector
 from .version import __version__
 
@@ -21,4 +22,7 @@ def get_eln_connector(eln_type: str = "cheminfo"):
 
 __all__ = [
     "__version__",
+    "ElnConfigureWidget",
+    "ElnExportWidget",
+    "ElnImportWidget",
 ]
