@@ -3,7 +3,7 @@
 from .cheminfo import CheminfoElnConnector
 from .openbis import OpenbisElnConnector
 from .version import __version__
-
+from .elns import ElnConfigureWidget, ElnExportWidget, ElnImportWidget
 
 def get_eln_connector(eln_type: str = "cheminfo"):
     """Provide ELN connector of a selected type."""
@@ -21,4 +21,7 @@ def get_eln_connector(eln_type: str = "cheminfo"):
 
 __all__ = [
     "__version__",
+    "ElnConfigureWidget",
+    "ElnExportWidget",
+    "ElnImportWidget",
 ]
