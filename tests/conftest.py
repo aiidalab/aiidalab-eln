@@ -3,6 +3,8 @@ import uuid
 
 import pytest
 
+pytest_plugins = ["aiida.tools.pytest_fixtures"]
+
 
 @pytest.fixture
 def mock_eln_config():

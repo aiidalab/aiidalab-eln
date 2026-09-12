@@ -3,6 +3,7 @@
 from .cheminfo import CheminfoElnConnector
 from .elns import ElnConfigureWidget, ElnExportWidget, ElnImportWidget
 from .openbis import OpenbisElnConnector
+from .openbis.structure_importer import OpenbisStructureImporterWidget
 from .version import __version__
 
 
@@ -25,4 +26,5 @@ __all__ = [
     "ElnConfigureWidget",
     "ElnExportWidget",
     "ElnImportWidget",
+    "OpenbisStructureImporterWidget",
 ]
