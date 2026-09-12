@@ -9,6 +9,18 @@ Integrate AiiDAlab with Electronic Laboratory Notebooks (ELN). This repository i
 As a first prototype we implemented an integration with the open-source [cheminfo ELN](cheminfo.github.io/).
 The ELN and integration can be tested via the [public deployment of the ELN](c6h6.org). Documentation on how to use the frontend can be found [here](docs.c6h6.org).
 
+## openBIS structure importer
+
+`OpenbisStructureImporterWidget` searches openBIS `ATOMISTIC_MODEL` and
+`MOLECULE` objects and provides structures to `StructureManagerWidget`. It can
+reuse an existing local AiiDA `StructureData`, selectively restore one structure
+from a linked `.aiida` archive, read a stored structure file, generate a planar
+structure from CDXML, or generate a 3D structure from SMILES. Connections and
+queries are started only when the user presses **Search**.
+
+Imported structures carry their openBIS identity in the standard AiiDA `eln`
+extra so downstream workflows can preserve and export the relationship.
+
 ## API
 
 - `eln_instance` refers to the URL of the ELN API.
