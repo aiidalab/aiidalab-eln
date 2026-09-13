@@ -26,6 +26,7 @@ from aiidalab_widgets_empa import CdxmlUploadWidget
 from ..elns import connect_to_eln
 
 ELN_ORIGIN_EXTRA = "eln"
+ELN_ORIGINS_EXTRA = "eln_origins"
 _ATOMISTIC_MODEL = "ATOMISTIC_MODEL"
 _MOLECULE = "MOLECULE"
 _AIIDA_NODE = "AIIDA_NODE"
@@ -58,10 +59,10 @@ def _permid(openbis_object) -> str:
 
 
 def _normalise_references(value) -> tuple[str, ...]:
-    if value in (None, ""):
+    if value is None:
         return ()
     if isinstance(value, str):
-        return (value,)
+        return () if value in ("", "--NOT FETCHED--") else (value,)
     if isinstance(value, Mapping):
         value = (
             value.get("permId")
@@ -70,17 +71,66 @@ def _normalise_references(value) -> tuple[str, ...]:
             or value.get("code")
         )
         return (str(value),) if value else ()
-    if isinstance(value, Iterable):
-        references = []
-        for item in value:
-            references.extend(_normalise_references(item))
-        return tuple(references)
     reference = (
         getattr(value, "permId", None)
         or getattr(value, "identifier", None)
         or getattr(value, "code", None)
     )
-    return (str(reference),) if reference else ()
+    if reference:
+        return (str(reference),)
+    if isinstance(value, Iterable):
+        references = []
+        for item in value:
+            references.extend(_normalise_references(item))
+        return tuple(references)
+    return ()
+
+
+def _relationship_records(session, openbis_object) -> dict[str, list[dict[str, str]]]:
+    """Return JSON-safe openBIS parent and child references."""
+    try:
+        detailed = session.get_object(_permid(openbis_object))
+    except Exception:
+        detailed = openbis_object
+
+    relationships = {}
+    for relation in ("parents", "children"):
+        getter = getattr(detailed, f"get_{relation}", None)
+        try:
+            related = getter() if callable(getter) else getattr(detailed, relation, ())
+        except Exception:
+            related = getattr(detailed, relation, ())
+        if isinstance(related, str) and related == "--NOT FETCHED--":
+            related = ()
+
+        entries = []
+        for reference in _normalise_references(related):
+            try:
+                target = session.get_object(reference)
+                data_type = _type_code(target)
+            except Exception:
+                data_type = ""
+            entries.append(
+                {
+                    "sample_uuid": reference,
+                    "data_type": data_type,
+                }
+            )
+        if entries:
+            relationships[relation] = entries
+    return relationships
+
+
+def _record_origin(node: orm.Data, origin: dict) -> None:
+    """Record a selected ELN origin without discarding older metadata."""
+    previous = node.base.extras.get(ELN_ORIGIN_EXTRA, None)
+    if isinstance(previous, Mapping) and dict(previous) != origin:
+        origins = list(node.base.extras.get(ELN_ORIGINS_EXTRA, []) or [])
+        for candidate in (dict(previous), origin):
+            if candidate not in origins:
+                origins.append(candidate)
+        node.base.extras.set(ELN_ORIGINS_EXTRA, origins)
+    node.base.extras.set(ELN_ORIGIN_EXTRA, origin)
 
 
 def _chemical_counts(formula: str) -> dict[str, int] | None:
@@ -598,6 +648,9 @@ class OpenbisStructureImporterWidget(ipw.VBox):
             origin["dataset_uuid"] = _permid(dataset)
         if filename:
             origin["source_file"] = filename
+        relationships = _relationship_records(self.session, openbis_object)
+        if relationships:
+            origin["relationships"] = relationships
         return origin
 
     def _concept_structure(self, openbis_object, source_kind, dataset, filename):
@@ -666,6 +719,12 @@ class OpenbisStructureImporterWidget(ipw.VBox):
                 structure = self._concept_structure(
                     openbis_object, source_kind, dataset, filename
                 )
+            if self.mode.value == _ATOMISTIC_MODEL and source_kind == "aiida":
+                origin = self._origin(openbis_object, source_kind)
+                origin["structure_fingerprint"] = structure_fingerprint(
+                    structure.get_ase()
+                )
+                _record_origin(structure, origin)
             self.structure = structure
             if (
                 self.mode.value == _ATOMISTIC_MODEL
