@@ -160,15 +160,18 @@ def test_smiles_import_records_openbis_origin():
 
 
 @pytest.mark.usefixtures("aiida_profile_clean")
-def test_atomistic_model_reuses_local_structure():
+def test_atomistic_model_reuses_local_structure_and_records_relationships():
     node = orm.StructureData(ase=ase.Atoms("CH4")).store()
+    molecule = FakeObject("mol-1", "MOLECULE", {"name": "methane"})
     model = FakeObject(
         "am-1",
         "ATOMISTIC_MODEL",
         {"name": "CH4", "dimensionality": "0", "wfms_uuid": str(node.uuid)},
     )
+    model._parents = [molecule]
     widget = OpenbisStructureImporterWidget(
-        session=FakeSession([model]), eln_instance="https://openbis.example/"
+        session=FakeSession([model, molecule]),
+        eln_instance="https://openbis.example/",
     )
     widget._search()
     widget._load()
@@ -177,6 +180,13 @@ def test_atomistic_model_reuses_local_structure():
     assert widget.structure.pk == node.pk
     assert f"PK {node.pk}" in widget.status.value
     assert "reusing it" in widget.status.value
+    origin = node.base.extras.get(ELN_ORIGIN_EXTRA)
+    assert origin["sample_uuid"] == "am-1"
+    assert origin["data_type"] == "ATOMISTIC_MODEL"
+    assert origin["relationships"]["parents"] == [
+        {"sample_uuid": "mol-1", "data_type": "MOLECULE"}
+    ]
+    assert origin["structure_fingerprint"] == structure_fingerprint(node.get_ase())
 
 
 @pytest.mark.usefixtures("aiida_profile_clean")
