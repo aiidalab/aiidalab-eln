@@ -113,6 +113,9 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Numbered copies created when AiiDAlab reopens running notebooks
+*-[0-9]*.ipynb
+
 # IPython
 profile_default/
 ipython_config.py
