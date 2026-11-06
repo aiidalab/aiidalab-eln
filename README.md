@@ -1,5 +1,7 @@
 # AiiDAlab-ELN
 
+> **Legacy Python 3.9 / AiiDA 2.6.3:** use [v0.1.5](https://github.com/aiidalab/aiidalab-eln/releases/tag/v0.1.5). See the [Empa legacy compatibility guide](https://github.com/nanotech-empa/aiida-nanotech-empa/blob/master/docs/legacy-python39-aiida263.md) for the matching package versions and installation constraints. Use a tagged version to preserve this runtime.
+
 [![Continuous Integration](https://github.com/aiidalab/aiidalab-eln/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/aiidalab/aiidalab-eln/actions/workflows/pre-commit.yml)
 
 Integrate AiiDAlab with Electronic Laboratory Notebooks (ELN). This repository implements a general API for interfacing AiiDAlab with some ELN and a concrete implementation for the integration with the [cheminfo ELN](cheminfo.github.io/).
